@@ -1,0 +1,230 @@
+/* POKÉMON TCG-STYLE MARKET CARDS   */
+
+.pokemon-card-tcg {
+    background: #0f172a;
+    border: 3px solid #22c55e55;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    color: #e5e7eb;
+    box-shadow: 0 0 20px #0008;
+    transition: 0.25s ease;
+    position: relative;
+}
+
+.pokemon-card-tcg:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 0 30px #22c55e88;
+}
+
+/* Image */
+.pokemon-img {
+    width: 75%;
+    max-height: 180px;
+    object-fit: contain;
+    margin: 0 auto 1rem;
+}
+
+/* Name */
+.pokemon-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: .5rem;
+    text-transform: uppercase;
+}
+
+/* Types */
+.pokemon-types {
+    font-size: .9rem;
+    margin-bottom: 1rem;
+    color: #a5b4fc;
+}
+
+/* Rarity badge (centered) */
+.rarity-badge {
+    position: absolute;
+    top: -0.8rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #22c55e;
+    padding: .3rem 1rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: bold;
+    color: #000;
+    box-shadow: 0 0 8px #22c55e;
+}
+
+/* Stats Box */
+.stats-box {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: .6rem;
+    margin-top: 1rem;
+}
+
+.stat {
+    background: #1e293b;
+    padding: .5rem;
+    border-radius: .5rem;
+    font-size: .9rem;
+    border: 1px solid #334155;
+}
+
+.stat span {
+    color: #4ade80;
+    font-weight: 600;
+    margin-right: .3rem;
+}
+
+
+/* TYPE-BASED BACKGROUND COLORS */
+
+.type-normal {
+    background: #757555;
+}
+
+.type-fire {
+    background: #7e4b24;
+}
+
+.type-water {
+    background: #33497a;
+}
+
+.type-electric {
+    background: #927914;
+}
+
+.type-grass {
+    background: #436b2c;
+}
+
+.type-ice {
+    background: #5a817f;
+}
+
+.type-fighting {
+    background: #5f1917;
+}
+
+.type-poison {
+    background: #441d43;
+}
+
+.type-ground {
+    background: #9e8b5a;
+}
+
+.type-flying {
+    background: #594d7c;
+}
+
+.type-psychic {
+    background: #752f44;
+}
+
+.type-bug {
+    background: #50580e;
+}
+
+.type-rock {
+    background: #91802a;
+}
+
+.type-ghost {
+    background: #413157;
+}
+
+.type-dragon {
+    background: #6a41d1;
+}
+
+.type-dark {
+    background: #554134;
+}
+
+.type-steel {
+    background: #B7B7CE;
+}
+
+.type-fairy {
+    background: #D685AD;
+}
+
+/* Wrapper for smooth display */
+.type-colored {
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Price chip inside card */
+.pokemon-price {
+    margin-top: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 2px solid #facc15;
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.7);
+    font-size: 0.9rem;
+}
+
+.pokechip-symbol {
+    font-size: 1.1rem;
+    color: #facc15;
+}
+
+.pokechip-value {
+    font-weight: 700;
+    color: #fefce8;
+}
+
+.pokechip-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #fde68a;
+}
+
+.level-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ffe066;
+    color: #000;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 0.75rem;
+    box-shadow: 0 0 8px rgba(255, 255, 0, 0.4);
+}
+
+/* Mobile emphasis for market cards */
+@media (max-width: 576px) {
+    .pokemon-card-tcg {
+        padding: 1.25rem;
+        border-radius: 1.1rem;
+    }
+
+    .pokemon-name {
+        font-size: 1.2rem;
+    }
+
+    .pokemon-img {
+        width: 80%;
+        max-height: 220px;
+    }
+
+    .stats-box {
+        gap: 0.5rem;
+    }
+
+    .pokemon-price {
+        width: 100%;
+        justify-content: center;
+    }
+}

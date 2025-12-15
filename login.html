@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokeCircuit Arena</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="CSS/style.css">
+
+    <style>
+        /* Welcome Bonus Styles */
+        .bonus-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #ffd86b, #f59e0b);
+            border-radius: 20px;
+            color: #000;
+            font-weight: 700;
+            font-size: 0.85rem;
+            animation: bonusPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes bonusPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(255, 216, 110, 0.5);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(255, 216, 110, 0.8);
+                transform: scale(1.02);
+            }
+        }
+
+        .bonus-claiming {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffd86b;
+        }
+
+        #welcomeMessage {
+            min-height: 50px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        #welcomeMessage .text-success {
+            color: #4ade80 !important;
+        }
+
+        #welcomeMessage .text-warning {
+            color: #ffd86b !important;
+        }
+
+        .wallet-warning {
+            background: rgba(245, 158, 11, 0.2) !important;
+            border: 1px solid #f59e0b !important;
+            color: #fcd34d !important;
+        }
+
+        /* Bonus icon animation */
+        .bonus-icon {
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
+</head>
+
+<body class="login-body">
+
+    <!-- Main Container -->
+    <div class="container py-4" id="mainContainer">
+        <div class="row align-items-center min-vh-100">
+
+            <!-- Hero / Left Side -->
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <h1 class="mb-3 game-title">
+                    PokeCircuit Arena
+                </h1>
+                <p class="lead mb-4 game-subtitle">Gotta catch 'em all!</p>
+
+                <!-- Welcome Bonus Banner -->
+                <div class="alert mb-4"
+                    style="background: linear-gradient(135deg, rgba(255, 216, 110, 0.2), rgba(245, 158, 11, 0.2)); border: 2px solid #ffd86b; border-radius: 16px;">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="bonus-icon" style="font-size: 2.5rem;">🎁</span>
+                        <div>
+                            <h5 class="mb-1" style="color: #ffd86b; font-weight: 700;">WELCOME BONUS!</h5>
+                            <p class="mb-0" style="color: #fcd34d;">
+                                New trainers receive <strong>250 FREE PKCHP</strong> on first registration!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mb-4" id="heroText">
+                    Connect your <span class="fw-semibold">Trainer Wallet</span>, Register
+                    your <span class="fw-semibold">Username</span>, and jump into battles.
+                </p>
+
+                <div class="card shadow-sm mt-3 feature-card">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Battle Arena -->
+                            <div class="col-12 col-md-4">
+                                <div class="h-100 p-3 rounded-3 feature-item">
+                                    <div class="mb-2 fs-4">⚔️</div>
+                                    <h6 class="mb-1 text-uppercase small fw-bold">Battle Arena</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Fight powerful trainers in strategic Pokémon battles.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Marketplace -->
+                            <div class="col-12 col-md-4">
+                                <div class="h-100 p-3 rounded-3 feature-item">
+                                    <div class="mb-2 fs-4">🛒</div>
+                                    <h6 class="mb-1 text-uppercase small fw-bold">Marketplace</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Buy items, power-ups, and rare to mythical Pokémon using your connected wallet.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Leaderboards -->
+                            <div class="col-12 col-md-4">
+                                <div class="h-100 p-3 rounded-3 feature-item">
+                                    <div class="mb-2 fs-4">🏆</div>
+                                    <h6 class="mb-1 text-uppercase small fw-bold">Leaderboards</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Track your trainer rank and climb the seasonal ladder.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- PVP Battles -->
+                            <div class="col-12 col-md-4">
+                                <div class="h-100 p-3 rounded-3 feature-item">
+                                    <div class="mb-2 fs-4">👥</div>
+                                    <h6 class="mb-1 text-uppercase small fw-bold">PVP Battles</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Challenge real players. Winner takes all!
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Pokédex -->
+                            <div class="col-12 col-md-4">
+                                <div class="h-100 p-3 rounded-3 feature-item">
+                                    <div class="mb-2 fs-4">📘</div>
+                                    <h6 class="mb-1 text-uppercase small fw-bold">Pokédex</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Browse detailed Pokémon data powered by the PokeAPI.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- P2P Trading -->
+                            <div class="col-12 col-md-4">
+                                <div class="h-100 p-3 rounded-3 feature-item">
+                                    <div class="mb-2 fs-4">💱</div>
+                                    <h6 class="mb-1 text-uppercase small fw-bold">P2P Trading</h6>
+                                    <p class="mb-0 small text-muted">
+                                        Trade Pokémon directly with other trainers.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trainer Login / Right Side -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-lg login-card">
+                    <div class="card-body p-4">
+                        <h2 class="card-title mb-2 text-center">Trainer Login</h2>
+                        <p class="text-center text-muted small mb-4">
+                            Step 1: Connect your MetaMask Wallet
+                        </p>
+
+                        <!-- Wallet Status -->
+                        <div class="mb-3">
+                            <div class="px-3 py-2 rounded-3 small" id="walletStatus">
+                                🔴 Wallet not connected
+                            </div>
+                        </div>
+
+                        <!-- Connect Wallet Button -->
+                        <div class="d-grid mb-2">
+                            <button type="button" class="btn btn-dark" id="connectWalletBtn">
+                                CONNECT WALLET
+                            </button>
+                        </div>
+
+                        <!-- Reminder -->
+                        <p class="small text-muted mb-4">
+                            A real <span class="fw-semibold">MetaMask wallet</span> is required to log in.
+                            Your trainer progress will be linked to your connected wallet address.
+                        </p>
+
+                        <hr>
+
+                        <p class="text-muted small mb-3">
+                            Step 2: Register your trainer username
+                        </p>
+
+                        <!-- Register Form -->
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label for="username" class="form-label small">Trainer Username</label>
+                                <input type="text" class="form-control text-white" id="username"
+                                    placeholder="Enter your trainer name" minlength="3" maxlength="16" required
+                                    disabled>
+                                <small class="text-muted">3-16 characters</small>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-dark" id="registerBtn" disabled>
+                                    REGISTER & ENTER ARENA
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Welcome message / Bonus status -->
+                        <div class="mt-3 small fw-semibold text-center" id="welcomeMessage" style="display: none;">
+                            Welcome To PokeCircuit Arena
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Ethers.js for blockchain -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+
+    <!-- Database connection (has your Supabase credentials) -->
+    <script src="JavaScript/db.js"></script>
+
+    <!-- App logic -->
+    <script src="JavaScript/app.js"></script>
+</body>
+
+</html>

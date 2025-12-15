@@ -1,0 +1,1140 @@
+/* ============================================================
+   POKECIRCUIT ARENA - HOME.CSS
+   Fixed navbar + Animated background matching PVP lobby
+=============================================================== */
+
+/* ============================================================
+   ANIMATED BACKGROUND - CONSISTENT ACROSS ALL PAGES
+=============================================================== */
+
+.home-body {
+    background:
+        radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(250, 204, 21, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #0a0c10 0%, #111827 100%);
+    color: #e5e7eb;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Animated sparkle particles */
+.home-body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255, 216, 110, 0.3), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(139, 92, 246, 0.3), transparent),
+        radial-gradient(2px 2px at 50px 160px, rgba(250, 204, 21, 0.3), transparent),
+        radial-gradient(2px 2px at 90px 40px, rgba(255, 216, 110, 0.3), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(59, 130, 246, 0.3), transparent),
+        radial-gradient(2px 2px at 160px 120px, rgba(34, 197, 94, 0.3), transparent),
+        radial-gradient(2px 2px at 200px 50px, rgba(168, 85, 247, 0.3), transparent);
+    background-size: 200px 200px;
+    animation: sparkle 20s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes sparkle {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-200px);
+    }
+}
+
+/* ============================================================
+   NAVBAR - FIXED STRAIGHT ALIGNMENT
+=============================================================== */
+
+.pc-navbar {
+    padding: 0.8rem 0;
+    border-bottom: 2px solid rgba(255, 216, 110, 0.15);
+    background: linear-gradient(180deg, rgba(10, 12, 16, 0.98) 0%, rgba(0, 0, 0, 0.95) 100%);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.pc-nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.pc-logo {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.pc-logo-main {
+    color: #facc15;
+    font-size: 1rem;
+}
+
+.pc-logo-circuit {
+    color: #22c55e;
+}
+
+/* Nav Collapse - Contains links and right section */
+.pc-nav-collapse {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    margin-left: 2rem;
+}
+
+/* Nav Links - Horizontal row */
+.pc-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.8rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pc-nav-link {
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    position: relative;
+    padding: 0.5rem 0;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+}
+
+/* Underline effect */
+.pc-nav-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    background: #4ade80;
+    transform: translateX(-50%);
+    transition: width 0.2s ease;
+}
+
+.pc-nav-link:hover {
+    color: #4ade80;
+}
+
+.pc-nav-link:hover::after {
+    width: 100%;
+}
+
+.pc-nav-active {
+    color: #4ade80 !important;
+}
+
+.pc-nav-active::after {
+    width: 100% !important;
+}
+
+/* Right Section - Balance, PKCHP, Wallet */
+.pc-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.pc-balance {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.3;
+}
+
+.pc-eth-balance {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffd86b;
+}
+
+.pc-usd-balance {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.pc-chain-name {
+    font-size: 0.7rem;
+    color: #22c55e;
+}
+
+/* PokeChip Badge */
+.pc-pokechip-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(255, 216, 110, 0.15), rgba(255, 216, 110, 0.05));
+    border: 1.5px solid #ffd86b;
+    font-size: 0.8rem;
+}
+
+.pc-pokechip-icon {
+    color: #ffd86b;
+    font-size: 1rem;
+}
+
+.pc-pokechip-label {
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.pc-pokechip-amount {
+    color: #ffd86b;
+    font-weight: 700;
+}
+
+/* Wallet Button */
+.pc-wallet-chip {
+    border-radius: 999px;
+    border: 1.5px solid #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
+    padding: 0.45rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pc-wallet-chip:hover {
+    background: rgba(34, 197, 94, 0.2);
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+}
+
+.pc-logout-btn {
+    border-radius: 999px;
+    border: 1.5px solid rgba(239, 68, 68, 0.7);
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: #0b0c10;
+    padding: 0.45rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 8px 16px rgba(239, 68, 68, 0.25);
+}
+
+.pc-logout-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.35);
+}
+
+/* Hamburger Toggle - Hidden on Desktop */
+.pc-nav-toggle {
+    display: none;
+    font-size: 1.8rem;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE
+=============================================================== */
+
+@media (max-width: 1024px) {
+    .pc-nav-links {
+        gap: 1.2rem;
+    }
+
+    .pc-nav-link {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .pc-nav-toggle {
+        display: block;
+    }
+
+    .pc-nav-collapse {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(10, 12, 16, 0.98);
+        border-bottom: 2px solid rgba(255, 216, 110, 0.15);
+        flex-direction: column;
+        padding: 1.5rem;
+        margin-left: 0;
+        backdrop-filter: blur(10px);
+    }
+
+    .pc-nav-collapse.active {
+        display: flex;
+    }
+
+    .pc-nav-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .pc-nav-link {
+        font-size: 1rem;
+        padding: 0.75rem;
+    }
+
+    .pc-nav-right {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .pc-balance {
+        align-items: center;
+    }
+
+    .pc-nav-container {
+        position: relative;
+    }
+}
+
+/* ============================================================
+   CONTENT WRAPPER - Ensure content is above background
+=============================================================== */
+
+main,
+.container,
+section,
+.row {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================================
+   WELCOME BANNER
+=============================================================== */
+
+.welcome-banner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.welcome-pill {
+    background: linear-gradient(135deg, #facc15, #f97316);
+    padding: 1.2rem 3rem;
+    border-radius: 999px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e1e1e;
+    text-shadow: 0 0.1rem 0.25rem rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0.5rem 1.2rem rgba(0, 0, 0, 0.4),
+        inset 0 0 0.4rem rgba(255, 255, 255, 0.4);
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.03rem;
+    transform: scale(1);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.welcome-pill:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0.8rem 1.4rem rgba(0, 0, 0, 0.55),
+        inset 0 0 0.6rem rgba(255, 255, 255, 0.5);
+}
+
+.highlight {
+    color: #111;
+    font-weight: 900;
+}
+
+/* ============================================================
+   HERO PROMO
+=============================================================== */
+
+.home-hero {
+    margin-top: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+    padding: clamp(1.8rem, 3vw, 2.8rem);
+    border-radius: 26px;
+    border: 1.5px solid rgba(255, 216, 110, 0.25);
+    background: radial-gradient(circle at 15% 20%, rgba(250, 204, 21, 0.08), transparent 35%),
+        radial-gradient(circle at 85% 10%, rgba(56, 189, 248, 0.08), transparent 35%),
+        linear-gradient(135deg, rgba(26, 29, 46, 0.85), rgba(12, 15, 24, 0.95));
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 216, 110, 0.12);
+    overflow: hidden;
+}
+
+.hero-grid::before,
+.hero-grid::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.7;
+}
+
+.hero-grid::before {
+    width: 220px;
+    height: 220px;
+    background: rgba(34, 197, 94, 0.18);
+    top: -60px;
+    right: -60px;
+}
+
+.hero-grid::after {
+    width: 180px;
+    height: 180px;
+    background: rgba(59, 130, 246, 0.18);
+    bottom: -50px;
+    left: -40px;
+}
+
+.hero-copy {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 1;
+}
+
+.hero-kicker {
+    font-size: 0.85rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #67e8f9;
+    font-weight: 700;
+}
+
+.hero-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(1.8rem, 2.8vw, 2.5rem);
+    line-height: 1.2;
+    color: #fefce8;
+    text-shadow: 0 0 25px rgba(255, 216, 110, 0.35);
+    margin: 0;
+}
+
+.title-glow {
+    color: #4ade80;
+}
+
+.hero-lede {
+    color: #cbd5e1;
+    font-size: 1rem;
+    max-width: 34rem;
+    margin-bottom: 0.5rem;
+}
+
+.hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+}
+
+.hero-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.85rem 1.4rem;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, color 0.2s ease;
+    border: 1.5px solid transparent;
+}
+
+.hero-btn-primary {
+    background: linear-gradient(135deg, #facc15, #f97316);
+    color: #0b0c10;
+    box-shadow: 0 12px 25px rgba(249, 115, 22, 0.35);
+}
+
+.hero-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(249, 115, 22, 0.45);
+}
+
+.hero-btn-secondary {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 216, 110, 0.35);
+    color: #fefce8;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+}
+
+.hero-btn-secondary:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 216, 110, 0.12);
+    color: #ffd86b;
+}
+
+.hero-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+}
+
+.hero-chip {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 216, 110, 0.35);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 32px rgba(0, 0, 0, 0.35);
+}
+
+.chip-label {
+    display: block;
+    font-size: 0.78rem;
+    color: #9ca3af;
+    letter-spacing: 0.04em;
+}
+
+.chip-value {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #fefce8;
+}
+
+.hero-visual {
+    position: relative;
+    display: grid;
+    gap: 1rem;
+    z-index: 1;
+}
+
+.hero-gif-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1.5px solid #22c55e;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.05));
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(34, 197, 94, 0.25);
+}
+
+.hero-gif-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.07), transparent 50%);
+    pointer-events: none;
+}
+
+.hero-gif {
+    display: block;
+    width: 100%;
+    height: clamp(230px, 30vw, 360px);
+    object-fit: cover;
+    background: radial-gradient(circle at 40% 40%, rgba(250, 204, 21, 0.16), rgba(0, 0, 0, 0.85));
+}
+
+.hero-flag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.9);
+    color: #0b0c10;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    box-shadow: 0 10px 22px rgba(14, 165, 233, 0.35);
+}
+
+.hero-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0.9rem 1rem;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 90%);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 0.6rem;
+}
+
+.overlay-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.7rem;
+    color: #facc15;
+    letter-spacing: 0.08em;
+}
+
+.overlay-copy {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.hero-bonus {
+    display: inline-flex;
+    flex-direction: column;
+    align-self: flex-start;
+    gap: 0.2rem;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.6);
+    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.25);
+}
+
+.bonus-label {
+    font-size: 0.8rem;
+    color: #bbf7d0;
+    letter-spacing: 0.04em;
+}
+
+.bonus-value {
+    font-size: 1.3rem;
+    color: #4ade80;
+    line-height: 1.2;
+}
+
+.bonus-sub {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+}
+
+@media (max-width: 992px) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+        padding: 1.6rem;
+    }
+
+    .hero-visual {
+        order: -1;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-title {
+        font-size: 1.55rem;
+    }
+
+    .hero-lede {
+        font-size: 0.95rem;
+    }
+
+    .hero-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hero-meta {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   FILTER BUTTONS
+=============================================================== */
+
+.market-filter-btn,
+.collection-filter-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #374151;
+    background: rgba(255, 255, 255, 0.03);
+    color: #9ca3af;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.market-filter-btn:hover,
+.collection-filter-btn:hover {
+    border-color: #ffd86b;
+    color: #ffd86b;
+}
+
+.market-filter-btn.active,
+.collection-filter-btn.active {
+    border-color: #ffd86b;
+    background: rgba(255, 216, 110, 0.1);
+    color: #ffd86b;
+    box-shadow: 0 0 10px rgba(255, 216, 110, 0.3);
+}
+
+/* Rarity-specific colors */
+.market-filter-btn[data-filter="common"].active,
+.collection-filter-btn[data-filter="common"].active {
+    border-color: #6b7280;
+    background: rgba(107, 114, 128, 0.15);
+    color: #9ca3af;
+}
+
+.market-filter-btn[data-filter="rare"].active,
+.collection-filter-btn[data-filter="rare"].active {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+    color: #60a5fa;
+}
+
+.market-filter-btn[data-filter="epic"].active,
+.collection-filter-btn[data-filter="epic"].active {
+    border-color: #a855f7;
+    background: rgba(168, 85, 247, 0.15);
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+    color: #c084fc;
+}
+
+.market-filter-btn[data-filter="legendary"].active,
+.collection-filter-btn[data-filter="legendary"].active {
+    border-color: #c2633e;
+    background: rgba(177, 105, 11, 0.15);
+    box-shadow: 0 0 12px rgba(139, 108, 41, 0.6);
+    color: #e79f4c;
+}
+
+.market-filter-btn[data-filter="mythical"].active,
+.collection-filter-btn[data-filter="mythical"].active {
+    border-color: #ff4ddb;
+    background: rgba(255, 77, 219, 0.15);
+    box-shadow: 0 0 12px rgba(255, 77, 219, 0.6);
+    color: #ff4ddb;
+}
+
+.market-filter-btn[data-filter="divine"].active,
+.collection-filter-btn[data-filter="divine"].active {
+    border-color: #e5e7eb;
+    background: rgba(250, 250, 250, 0.12);
+    box-shadow: 0 0 16px rgba(250, 250, 250, 0.7);
+    color: #fefce8;
+}
+
+/* Divine rarity badge */
+.rarity-divine {
+    background: linear-gradient(135deg, #faf5ff, #facc15, #f97316) !important;
+    color: #111827 !important;
+    box-shadow: 0 0 16px rgba(250, 250, 250, 0.9) !important;
+}
+
+/* ============================================================
+   BUY MODAL
+=============================================================== */
+
+.buy-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    backdrop-filter: blur(8px);
+}
+
+.d-none {
+    display: none !important;
+}
+
+.buy-modal {
+    width: min(36rem, 90%);
+    background: linear-gradient(145deg, #1a1d2e, #0f1219);
+    border-radius: 1.5rem;
+    border: 3px solid #ffd86b;
+    box-shadow: 0 0 60px rgba(255, 216, 110, 0.3);
+    color: #e5e7eb;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.buy-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.buy-modal-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.9rem;
+    letter-spacing: 0.08rem;
+    text-transform: uppercase;
+    color: #ffd86b;
+}
+
+.buy-modal-close {
+    background: none;
+    border: none;
+    color: #e5e7eb;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.buy-modal-close:hover {
+    color: #ef4444;
+}
+
+.buy-modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.buy-modal-left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.buy-modal-sprite {
+    width: 6rem;
+    height: 6rem;
+    object-fit: contain;
+    filter: drop-shadow(0 0.5rem 0.75rem rgba(0, 0, 0, 0.8));
+}
+
+.buy-modal-right {
+    font-size: 0.9rem;
+}
+
+.buy-modal-name {
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.08rem;
+    color: #fff;
+}
+
+.buy-modal-rarity span {
+    font-weight: 600;
+}
+
+.buy-modal-price span {
+    font-weight: 700;
+    color: #facc15;
+}
+
+.buy-modal-balance span {
+    font-weight: 700;
+    color: #4ade80;
+}
+
+.buy-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+@media (max-width: 576px) {
+    .buy-modal-body {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .buy-modal-footer {
+        justify-content: center;
+    }
+}
+
+/* Buy Button on Card */
+.pokemon-card-tcg .buy-btn {
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06rem;
+    border: none;
+    background: linear-gradient(135deg, #facc15, #f97316);
+    color: #111827;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.55);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    margin-top: 0.5rem;
+}
+
+.pokemon-card-tcg .buy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.75rem 1.4rem rgba(0, 0, 0, 0.8);
+    filter: brightness(1.05);
+}
+
+/* ============================================================
+   MARKET HEADER
+=============================================================== */
+
+.market-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.4rem;
+    letter-spacing: 0.08rem;
+    text-transform: uppercase;
+    color: #ffd86b;
+    margin-bottom: 0.35rem;
+    text-shadow: 0 0 20px rgba(255, 216, 110, 0.5);
+}
+
+.market-timer {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #00eaff;
+    font-family: "Press Start 2P", sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    border: 2px solid #00eaff55;
+    box-shadow: 0 0 12px #00eaff66, inset 0 0 8px #00eaff33;
+}
+
+#refreshTimer {
+    animation: timerPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes timerPulse {
+    0% {
+        text-shadow: 0 0 3px #00eaff;
+    }
+
+    50% {
+        text-shadow: 0 0 12px #00eaff;
+    }
+
+    100% {
+        text-shadow: 0 0 3px #00eaff;
+    }
+}
+
+/* ============================================================
+   FEATURED SECTION
+=============================================================== */
+
+.featured-section {
+    background: linear-gradient(145deg, rgba(26, 29, 46, 0.9), rgba(15, 18, 25, 0.95));
+    border: 2px solid rgba(255, 216, 110, 0.2);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.featured-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.featured-label {
+    color: #ffd86b;
+    font-family: 'Press Start 2P';
+    font-size: 0.85rem;
+}
+
+.featured-timer {
+    color: #00ff9d;
+    font-family: monospace;
+    font-size: 1rem;
+}
+
+.featured-card {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    align-items: center;
+}
+
+.featured-img {
+    width: 220px;
+    filter: drop-shadow(0 0 18px #ff00ffaa);
+}
+
+.featured-info {
+    flex: 1;
+}
+
+.featured-name {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #fff;
+}
+
+.featured-rarity {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ff4ddb;
+}
+
+.featured-desc {
+    color: #cccccc;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.featured-btn {
+    margin-top: 1rem;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #ff4ddb, #ff8bf5);
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 0 10px #ff4ddbaa;
+    transition: 0.2s ease;
+}
+
+.featured-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px #ff4ddbcc;
+}
+
+.featured-rarity.divine {
+    color: #fff7c2;
+    text-shadow: 0 0 10px #facc15, 0 0 20px #fff;
+}
+
+.featured-buy-btn {
+    background: linear-gradient(135deg, #ff3cf0, #ff7ae0);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+    box-shadow: 0 0 12px rgba(255, 0, 140, 0.5);
+}
+
+.featured-buy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 18px rgba(255, 0, 160, 0.8);
+}
+
+.level-badge {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #ffd54f;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+/* ============================================================
+   MARKET MOBILE RESPONSIVE
+=============================================================== */
+
+#pokemonGrid.row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+#pokemonGrid.row > [class*="col-"] {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+}
+
+@media (max-width: 992px) {
+    .market-header {
+        text-align: center;
+    }
+
+    .featured-section {
+        padding: 1.5rem;
+    }
+
+    .featured-card {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+
+    .featured-info {
+        width: 100%;
+    }
+
+    .featured-img {
+        width: min(260px, 80%);
+    }
+
+    .market-filter-group {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .market-filter-btn {
+        flex: 1 1 45%;
+        min-width: 120px;
+    }
+
+    #pokemonGrid.row {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .market-filter-group {
+        display: flex;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .market-filter-btn {
+        flex: 1 1 48%;
+        padding: 0.55rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .featured-section {
+        padding: 1.2rem;
+    }
+
+    .featured-card {
+        gap: 1.2rem;
+    }
+
+    .featured-name {
+        font-size: 1.6rem;
+    }
+
+    .featured-desc {
+        font-size: 0.95rem;
+    }
+
+    #pokemonGrid.row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}

@@ -1,0 +1,723 @@
+/* ============================================================
+   POKECIRCUIT ARENA - MATCH SETUP (TOURNAMENT)
+   Fixed card layout - cards display properly as cards
+=============================================================== */
+
+/* ============================================================
+   MAIN CONTAINER
+=============================================================== */
+
+.setup-container {
+    min-height: calc(100vh - 80px);
+    padding: 40px 20px;
+    background:
+        radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(250, 204, 21, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #0a0c10 0%, #111827 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated background particles */
+.setup-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255, 216, 110, 0.3), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(139, 92, 246, 0.3), transparent),
+        radial-gradient(2px 2px at 50px 160px, rgba(250, 204, 21, 0.3), transparent),
+        radial-gradient(2px 2px at 90px 40px, rgba(255, 216, 110, 0.3), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(59, 130, 246, 0.3), transparent);
+    background-size: 200px 200px;
+    animation: sparkle 20s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes sparkle {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-200px);
+    }
+}
+
+/* ============================================================
+   SECTION STYLING
+=============================================================== */
+
+.setup-section {
+    margin-bottom: 50px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    animation: fadeSlideIn 0.5s ease-out;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.setup-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 2rem;
+    color: #ffd86b;
+    text-shadow:
+        0 0 20px rgba(255, 216, 110, 0.8),
+        0 0 40px rgba(255, 216, 110, 0.4),
+        0 4px 0 #b8860b;
+    margin-bottom: 15px;
+    letter-spacing: 2px;
+}
+
+.setup-sub {
+    font-size: 1rem;
+    color: #9ca3af;
+    margin-bottom: 30px;
+    background: rgba(17, 20, 28, 0.8);
+    padding: 15px 25px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 216, 110, 0.2);
+    display: inline-block;
+}
+
+.setup-sub span {
+    color: #ffd86b;
+    font-weight: 700;
+}
+
+/* ============================================================
+   MODE / TIER SELECTION BUTTONS
+=============================================================== */
+
+.setup-options {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.setup-btn {
+    flex: 1;
+    min-width: 250px;
+    max-width: 300px;
+    padding: 30px 25px;
+    background: linear-gradient(145deg, #1a1d2e, #0f1219);
+    border: 2px solid #374151;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.setup-btn::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, #ffd86b, #f59e0b, #ffd86b);
+    background-size: 200% 200%;
+    border-radius: 22px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.setup-btn:hover {
+    transform: translateY(-5px);
+    border-color: #ffd86b;
+    box-shadow: 0 10px 30px rgba(255, 216, 110, 0.3);
+}
+
+.setup-btn:hover::before {
+    opacity: 1;
+    animation: glowShift 2s ease infinite;
+}
+
+@keyframes glowShift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.setup-btn.active {
+    border-color: #22c55e;
+    background: linear-gradient(145deg, #1a2e1a, #0f1910);
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
+}
+
+.setup-btn.active::before {
+    background: linear-gradient(135deg, #22c55e, #16a34a, #22c55e);
+    opacity: 1;
+}
+
+/* Tier-specific colors */
+.setup-btn[data-battle-tier="low"]:hover,
+.setup-btn[data-battle-tier="low"].active {
+    border-color: #9ca3af;
+    box-shadow: 0 0 25px rgba(156, 163, 175, 0.3);
+}
+
+.setup-btn[data-battle-tier="mid"]:hover,
+.setup-btn[data-battle-tier="mid"].active {
+    border-color: #60a5fa;
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+}
+
+.setup-btn[data-battle-tier="high"]:hover,
+.setup-btn[data-battle-tier="high"].active {
+    border-color: #c084fc;
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
+}
+
+/* ============================================================
+   EMPTY STATE
+=============================================================== */
+
+.match-empty,
+#matchEmptyState {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+#matchEmptyState p {
+    font-size: 1.2rem;
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+/* ============================================================
+   POKEMON SELECTION GRID - FIXED LAYOUT
+=============================================================== */
+
+#pokemonGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+/* Override Bootstrap column behavior */
+#pokemonGrid .col-12,
+#pokemonGrid .col-sm-6,
+#pokemonGrid .col-md-4,
+#pokemonGrid .col-lg-3 {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+}
+
+/* ============================================================
+   SELECTION CARDS - FIXED CARD SHAPE
+=============================================================== */
+
+.select-card {
+    width: 260px;
+    background: linear-gradient(145deg, #1a1d2e, #0f1219);
+    border: 2px solid #374151;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.select-card:hover {
+    transform: translateY(-8px);
+    border-color: #ffd86b;
+    box-shadow: 0 15px 40px rgba(255, 216, 110, 0.25);
+}
+
+.selected-card {
+    border: 3px solid #22c55e !important;
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.5) !important;
+}
+
+.selected-card::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border-radius: 22px;
+    z-index: -1;
+    animation: selectedPulse 2s ease-in-out infinite;
+}
+
+@keyframes selectedPulse {
+
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Slot Label */
+.slot-label {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    padding: 6px 14px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 20px;
+    z-index: 20;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+/* Checkmark */
+.checkmark-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 35px;
+    height: 35px;
+    background: #22c55e;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+    z-index: 20;
+    animation: checkBounce 0.3s ease;
+}
+
+@keyframes checkBounce {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ============================================================
+   INNER CARD - FIXED HEIGHT
+=============================================================== */
+
+.select-inner {
+    border-radius: 18px;
+    padding: 20px 15px;
+    position: relative;
+}
+
+/* Type backgrounds */
+.type-normal {
+    background: #757555;
+}
+
+.type-fire {
+    background: #7e4b24;
+}
+
+.type-water {
+    background: #33497a;
+}
+
+.type-electric {
+    background: #927914;
+}
+
+.type-grass {
+    background: #436b2c;
+}
+
+.type-ice {
+    background: #5a817f;
+}
+
+.type-fighting {
+    background: #5f1917;
+}
+
+.type-poison {
+    background: #441d43;
+}
+
+.type-ground {
+    background: #9e8b5a;
+}
+
+.type-flying {
+    background: #594d7c;
+}
+
+.type-psychic {
+    background: #752f44;
+}
+
+.type-bug {
+    background: #50580e;
+}
+
+.type-rock {
+    background: #91802a;
+}
+
+.type-ghost {
+    background: #413157;
+}
+
+.type-dragon {
+    background: #6a41d1;
+}
+
+.type-dark {
+    background: #554134;
+}
+
+.type-steel {
+    background: #B7B7CE;
+}
+
+.type-fairy {
+    background: #D685AD;
+}
+
+/* ============================================================
+   BADGES
+=============================================================== */
+
+.rarity-badge {
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 18px;
+    border-radius: 0 0 12px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 10;
+}
+
+.rarity-badge.rarity-common {
+    background: #6b7280;
+    color: #fff;
+}
+
+.rarity-badge.rarity-rare {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.rarity-badge.rarity-epic {
+    background: #a855f7;
+    color: #fff;
+}
+
+.rarity-badge.rarity-legendary {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #000;
+}
+
+.rarity-badge.rarity-mythical {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: #fff;
+}
+
+.rarity-badge.rarity-divine {
+    background: linear-gradient(135deg, #ffd86b, #fff, #ffd86b);
+    color: #000;
+    box-shadow: 0 0 15px rgba(255, 216, 110, 0.8);
+}
+
+.level-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: #ffd86b;
+    font-weight: 700;
+    backdrop-filter: blur(5px);
+}
+
+/* ============================================================
+   POKEMON IMAGE & INFO
+=============================================================== */
+
+.pokemon-img {
+    width: 100px;
+    height: 100px;
+    margin: 25px auto 10px;
+    display: block;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    transition: transform 0.3s ease;
+}
+
+.select-card:hover .pokemon-img {
+    transform: scale(1.1) translateY(-5px);
+}
+
+.pokemon-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #fff;
+    text-align: center;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 5px;
+}
+
+.pokemon-types {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+/* ============================================================
+   STATS GRID
+=============================================================== */
+
+.stats-box {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.stat {
+    background: rgba(0, 0, 0, 0.4);
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.stat span {
+    color: #4ade80;
+    font-weight: 700;
+    display: block;
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   EXP CONTAINER
+=============================================================== */
+
+.exp-container {
+    margin: 8px 0;
+}
+
+.exp-label {
+    font-size: 0.7rem;
+    color: #aaa;
+    margin-bottom: 4px;
+}
+
+/* ============================================================
+   RISK WARNING ALERTS
+=============================================================== */
+
+.select-inner .alert {
+    margin: 10px 0;
+    padding: 8px !important;
+    font-size: 0.7rem !important;
+    border-radius: 8px;
+}
+
+.select-inner .alert-danger {
+    background: rgba(239, 68, 68, 0.3);
+    border: 1px solid #ef4444;
+    color: #fca5a5;
+}
+
+.select-inner .alert-warning {
+    background: rgba(245, 158, 11, 0.3);
+    border: 1px solid #f59e0b;
+    color: #fcd34d;
+}
+
+/* ============================================================
+   SELECT BUTTON
+=============================================================== */
+
+.select-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #ffd86b, #f59e0b);
+    border-radius: 10px;
+    font-weight: 700;
+    border: none;
+    color: #000;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 10px;
+}
+
+.select-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 216, 110, 0.4);
+}
+
+.selected-card .select-btn {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+}
+
+/* ============================================================
+   START MATCH BUTTON
+=============================================================== */
+
+#startMatchBtn {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin: 40px auto 0;
+    padding: 20px 40px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    border-radius: 16px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.85rem;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 30px rgba(34, 197, 94, 0.4);
+    text-transform: uppercase;
+}
+
+#startMatchBtn:hover:not(:disabled) {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(34, 197, 94, 0.6);
+}
+
+#startMatchBtn:disabled {
+    background: #374151;
+    color: #6b7280;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ============================================================
+   INFO BADGES
+=============================================================== */
+
+.setup-sub #entryFeeValue {
+    color: #ef4444;
+}
+
+.setup-sub #chipRewardValue {
+    color: #22c55e;
+}
+
+.setup-sub #expRewardValue {
+    color: #3b82f6;
+}
+
+.setup-sub #selectedCountValue {
+    color: #ffd86b;
+}
+
+/* ============================================================
+   RESPONSIVE
+=============================================================== */
+
+@media (max-width: 768px) {
+    .setup-title {
+        font-size: 1.4rem;
+    }
+
+    .setup-options {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .setup-btn {
+        min-width: 100%;
+        max-width: 350px;
+    }
+
+    .select-card {
+        width: 240px;
+    }
+
+    .pokemon-img {
+        width: 90px;
+        height: 90px;
+    }
+}
+
+@media (max-width: 480px) {
+    .setup-container {
+        padding: 20px 15px;
+    }
+
+    .setup-title {
+        font-size: 1.1rem;
+    }
+
+    .setup-sub {
+        font-size: 0.85rem;
+        padding: 12px 15px;
+    }
+
+    .select-card {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    #startMatchBtn {
+        font-size: 0.7rem;
+        padding: 15px 25px;
+    }
+}

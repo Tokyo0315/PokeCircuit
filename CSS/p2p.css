@@ -1,0 +1,36 @@
+/* -------------------------------------------
+   P2P MARKET STYLE — matches marketplace.css
+--------------------------------------------*/
+
+.p2p-seller-tag {
+    font-size: 0.85rem;
+    color: #87cefa;
+    margin-bottom: 4px;
+}
+
+.p2p-price-tag {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffcc33;
+}
+
+.p2p-card-footer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cancel-p2p-btn {
+    background-color: darkred; /* bootstrap red */
+    border: none;
+    color: white;
+    width: 50%;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.cancel-p2p-btn:hover {
+    background-color: darkslategrey;
+    color: black;
+}

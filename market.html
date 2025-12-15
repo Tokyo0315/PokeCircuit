@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>PokeCircuit Arena - Marketplace</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="CSS/home.css">
+    <link rel="stylesheet" href="CSS/pokecards.css">
+</head>
+
+<body class="home-body">
+
+    <!-- NAVBAR -->
+    <header class="pc-navbar">
+        <div class="container pc-nav-container">
+
+            <!-- Left: Logo -->
+            <a href="home.html" class="pc-logo text-decoration-none">
+                <span class="pc-logo-main">Poke</span><span class="pc-logo-circuit">Circuit</span>
+            </a>
+
+            <!-- Hamburger button -->
+            <button class="pc-nav-toggle" id="navToggle">☰</button>
+
+            <!-- COLLAPSIBLE MENU -->
+            <div class="pc-nav-collapse mt-2" id="navMenu">
+
+
+                <!-- Center: Nav links -->
+                <nav class="pc-nav-links">
+                    <a href="home.html" class="pc-nav-link ">Home</a>
+                    <a href="market.html" class="pc-nav-link pc-nav-active">Marketplace</a>
+                    <a href="collection.html" class="pc-nav-link">Collection</a>
+                    <a href="match-setup.html" class="pc-nav-link">Tournament</a>
+                    <a href="pvp-lobby.html" class="pc-nav-link">PVP Battle</a>
+                    <a href="p2p.html" class="pc-nav-link">P2P Market</a>
+                    <a href="transactions.html" class="pc-nav-link">Transactions</a>
+                </nav>
+
+                <!-- Right: Wallet -->
+                <div class="pc-nav-right d-flex align-items-center gap-3">
+                    <div class="pc-balance">
+                        <span class="pc-eth-balance">0.0000 ETH</span>
+                        <span class="pc-usd-balance text-warning small">$0.00</span>
+                        <span class="pc-chain-name text-success small"></span>
+                    </div>
+
+                    <!-- PokeChip currency chip -->
+                    <div class="pc-pokechip-chip">
+                        <span class="pc-pokechip-icon">◎</span>
+                        <span class="pc-pokechip-label">PKCHP</span>
+                        <span id="pkchpBalance" class="pc-pokechip-amount">0</span>
+                    </div>
+
+                    <button class="pc-wallet-chip" type="button" id="connectWalletBtn">
+                        No Wallet
+                    </button>
+                    <button class="pc-logout-btn" type="button">
+                        Logout
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="container py-5">
+        <section class="market-header mb-4">
+            <h1 class="mb-1 market-title">Marketplace</h1>
+            <p class="text-secondary mb-3">
+                Browse Pokémons from all regions.
+            </p>
+
+            <div class="market-timer text-center mt-3 mb-3">
+                <span id="refreshTimer">Next refresh in 02:00</span>
+            </div>
+
+            <!-- FEATURED POKEMON SECTION -->
+            <section class="featured-section mb-5">
+                <div class="featured-header">
+                    <span class="featured-label">FEATURED</span>
+                    <span id="featuredTimer" class="featured-timer">00:00:00</span>
+                </div>
+
+                <div class="featured-card">
+                    <img id="featuredSprite" class="featured-img" src="" alt="Featured Pokemon">
+
+                    <div class="featured-info">
+                        <h2 id="featuredName" class="featured-name">FEATURED POKÉMON</h2>
+                        <p id="featuredRarity" class="featured-rarity"></p>
+
+                        <p class="featured-desc">
+                            Can only be obtained from the Featured Event.
+                            Not available in marketplace rotation.
+                        </p>
+
+                        <button id="featuredBuyBtn" class="featured-buy-btn">
+                            Buy for <span id="featuredPriceValue">0</span> <span id="featuredPriceLabel">PKCHP</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rarity Filter -->
+            <div class="btn-group market-filter-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-light market-filter-btn active" data-filter="all">
+                    All
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success market-filter-btn" data-filter="common">
+                    Common
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning market-filter-btn" data-filter="rare">
+                    Rare
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-epic market-filter-btn" data-filter="epic">
+                    Epic
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-legendary market-filter-btn"
+                    data-filter="legendary">
+                    Legendary
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-pink market-filter-btn" data-filter="mythical">
+                    Mythical
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-light market-filter-btn" data-filter="divine">
+                    Divine
+                </button>
+            </div>
+        </section>
+
+        <div id="pokemonGrid" class="row g-4">
+            <!-- Cards will be inserted here -->
+        </div>
+    </main>
+
+    <!-- BUY CONFIRMATION MODAL -->
+    <div id="buyModalBackdrop" class="buy-modal-backdrop d-none">
+        <div class="buy-modal">
+            <div class="buy-modal-header">
+                <span class="buy-modal-title">Confirm Purchase</span>
+                <button type="button" class="buy-modal-close" id="buyModalClose">&times;</button>
+            </div>
+
+            <div class="buy-modal-body">
+                <div class="buy-modal-left">
+                    <img id="buyModalSprite" src="" alt="Pokemon" class="buy-modal-sprite">
+                </div>
+                <div class="buy-modal-right">
+                    <h3 id="buyModalName" class="buy-modal-name">POKÉMON NAME</h3>
+                    <p class="buy-modal-rarity">
+                        Rarity: <span id="buyModalRarity">Common</span>
+                    </p>
+                    <p class="buy-modal-price">
+                        Price:
+                        <span id="buyModalPriceValue">0</span>
+                        <span id="buyModalPriceLabel">PokeChip</span>
+                    </p>
+                    <p class="buy-modal-balance">
+                        Your PokeChip:
+                        <span id="buyModalBalance">0</span>
+                    </p>
+                    <p class="buy-modal-warning text-warning small mb-0">
+                        Please confirm your purchase!
+                    </p>
+                </div>
+            </div>
+
+            <div class="buy-modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" id="buyModalCancel">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-sm btn-warning" id="buyModalConfirm">
+                    Confirm Purchase
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Load ethers first -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+
+    <script>
+        window.CURRENT_USER_ID = localStorage.getItem("CURRENT_USER_ID");
+        window.CURRENT_WALLET_ADDRESS =
+            localStorage.getItem("CURRENT_WALLET_ADDRESS") ||
+            (window.ethereum && window.ethereum.selectedAddress) ||
+            null;
+
+        window.PKCHP_ADDRESS = "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
+
+
+        window.PKCHP_ABI = [
+            {
+                "inputs": [
+                    { "internalType": "address", "name": "account", "type": "address" }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    { "internalType": "uint256", "name": "", "type": "uint256" }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [
+                    { "internalType": "uint8", "name": "", "type": "uint8" }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "internalType": "address", "name": "to", "type": "address" },
+                    { "internalType": "uint256", "name": "amount", "type": "uint256" }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    { "internalType": "bool", "name": "", "type": "bool" }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+    </script>
+
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="JavaScript/db.js"></script>
+    <script src="JavaScript/txLogger.js"></script>
+
+    <!-- GAME DATA (must load BEFORE market.js) -->
+    <script src="JavaScript/pokeApi.js"></script>
+    <script src="JavaScript/rarityData.js"></script>
+    <script src="JavaScript/legendaryList.js"></script>
+
+    <!-- MARKET MUST LOAD BEFORE HOME.JS -->
+    <script src="JavaScript/market.js"></script>
+
+    <!-- LOAD HOME.JS LAST ALWAYS -->
+    <script src="JavaScript/home.js"></script>
+
+</body>
+
+</html>

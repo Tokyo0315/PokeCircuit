@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokeCircuit Arena - Home</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Your styles -->
+    <link rel="stylesheet" href="CSS/home.css">
+</head>
+
+<body class="home-body">
+
+    <!-- NAVBAR -->
+    <header class="pc-navbar">
+        <div class="container pc-nav-container">
+
+            <!-- Left: Logo -->
+            <a href="home.html" class="pc-logo text-decoration-none">
+                <span class="pc-logo-main">Poke</span><span class="pc-logo-circuit">Circuit</span>
+            </a>
+
+            <!-- Hamburger button -->
+            <button class="pc-nav-toggle" id="navToggle">☰</button>
+
+            <!-- COLLAPSIBLE MENU -->
+            <div class="pc-nav-collapse mt-2" id="navMenu">
+
+                <!-- Center: Nav links -->
+                <nav class="pc-nav-links">
+                    <a href="home.html" class="pc-nav-link pc-nav-active">Home</a>
+                    <a href="market.html" class="pc-nav-link">Marketplace</a>
+                    <a href="collection.html" class="pc-nav-link">Collection</a>
+                    <a href="match-setup.html" class="pc-nav-link">Tournament</a>
+                    <a href="pvp-lobby.html" class="pc-nav-link">PVP Battle</a>
+                    <a href="p2p.html" class="pc-nav-link">P2P</a>
+                    <a href="transactions.html" class="pc-nav-link">Transactions</a>
+                </nav>
+
+                <!-- Right: Wallet -->
+                <div class="pc-nav-right d-flex align-items-center gap-3">
+                    <div class="pc-balance">
+                        <span class="pc-eth-balance">0.0000 ETH</span>
+                        <span class="pc-usd-balance text-warning small">$0.00</span>
+                        <span class="pc-chain-name text-success small"></span>
+                    </div>
+
+                    <!-- PokeChip currency chip -->
+                    <div class="pc-pokechip-chip">
+                        <span class="pc-pokechip-icon">◎</span>
+                        <span class="pc-pokechip-label">PKCHP</span>
+                        <span class="pc-pokechip-amount">0</span>
+                    </div>
+
+                    <button class="pc-wallet-chip" type="button">
+                        No Wallet
+                    </button>
+                    <button class="pc-logout-btn" type="button">
+                        Logout
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- WELCOME BANNER -->
+    <section class="welcome-banner container text-center mt-5">
+        <div class="welcome-pill">
+            Welcome to <span class="highlight">PokeCircuit Arena</span>
+        </div>
+    </section>
+
+    <!-- HERO PROMO -->
+    <section class="home-hero container">
+        <div class="hero-grid">
+            <div class="hero-copy">
+                <p class="hero-kicker">PokeCircuit Arena Spotlight · Live</p>
+                <h1 class="hero-title">Lead your squad into the <span class="title-glow">PokeCircuit Arena</span></h1>
+                <p class="hero-lede">Charge your Pokemon through the frontline while opponent breaks your shield. New
+                    rewards make every match feel like a championship fight.</p>
+
+                <div class="hero-ctas">
+                    <a class="hero-btn hero-btn-primary" href="pvp-lobby.html">Enter Arena</a>
+                    <a class="hero-btn hero-btn-secondary" href="market.html">Browse Marketplace</a>
+                </div>
+
+                <div class="hero-meta">
+                    <div class="hero-chip">
+                        <span class="chip-label">Pokemon Roster</span>
+                        <span class="chip-value">152 Pokemons</span>
+                    </div>
+                    <div class="hero-chip">
+                        <span class="chip-label">Buy Your First Pokemon</span>
+                        <span class="chip-value">16 PKCHP Only!</span>
+                    </div>
+                    <div class="hero-chip">
+                        <span class="chip-label">Entry Fee</span>
+                        <span class="chip-value">For As Low As 10 PKCHP!</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="hero-gif-frame">
+                    <div class="hero-flag">Arena Highlight</div>
+                    <img src="imgs/promo-hero.gif" alt="Pikachu and Zekrom crashing into the arena" class="hero-gif">
+                    <div class="hero-overlay">
+                        <span class="overlay-label">PokeCircuit Arena</span>
+                        <span class="overlay-copy">Clash of Pokemons</span>
+                    </div>
+                </div>
+
+                <div class="hero-bonus">
+                    <span class="bonus-label">Launch bonus</span>
+                    <strong class="bonus-value">+250 PKCHP</strong>
+                    <span class="bonus-sub">For your very first login in the game!</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================== SCRIPTS ================== -->
+
+    <!-- Supabase client -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.0/dist/ethers.umd.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="JavaScript/db.js"></script>
+
+    <!-- Your page logic -->
+    <script src="JavaScript/home.js"></script>
+</body>
+
+</html>

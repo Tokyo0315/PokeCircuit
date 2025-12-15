@@ -1,0 +1,1012 @@
+/* ============================================================
+   POKECIRCUIT ARENA - TRANSACTIONS PAGE STYLES
+   Updated with PVP Win/Loss styling
+=============================================================== */
+
+/* ============================================================
+   HEADER STYLES
+=============================================================== */
+
+.tx-header {
+    padding: 25px;
+    background: linear-gradient(145deg, rgba(26, 29, 46, 0.9), rgba(15, 18, 25, 0.95));
+    border-radius: 20px;
+    border: 2px solid rgba(255, 216, 110, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    position: relative;
+    z-index: 1;
+}
+
+.tx-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.5rem;
+    color: #ffd86b;
+    margin-bottom: 8px;
+    text-shadow:
+        0 0 20px rgba(255, 216, 110, 0.8),
+        0 0 40px rgba(255, 216, 110, 0.4);
+}
+
+.tx-icon {
+    margin-right: 10px;
+}
+
+.tx-subtitle {
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   STATS CARDS
+=============================================================== */
+
+.tx-stats {
+    display: flex;
+    gap: 12px;
+}
+
+.tx-stat-card {
+    background: linear-gradient(145deg, rgba(26, 29, 46, 0.9), rgba(15, 18, 25, 0.95));
+    border: 2px solid rgba(100, 100, 150, 0.3);
+    border-radius: 16px;
+    padding: 15px 25px;
+    text-align: center;
+    min-width: 90px;
+    transition: all 0.3s ease;
+}
+
+.tx-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.tx-stat-card.tx-stat-win {
+    border-color: rgba(34, 197, 94, 0.5);
+    background: linear-gradient(145deg, rgba(34, 197, 94, 0.15), rgba(15, 18, 25, 0.95));
+}
+
+.tx-stat-card.tx-stat-loss {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.15), rgba(15, 18, 25, 0.95));
+}
+
+.tx-stat-value {
+    display: block;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.3rem;
+    color: #fff;
+}
+
+.tx-stat-card.tx-stat-win .tx-stat-value {
+    color: #22c55e;
+    text-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+}
+
+.tx-stat-card.tx-stat-loss .tx-stat-value {
+    color: #ef4444;
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+.tx-stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ============================================================
+   FILTERS
+=============================================================== */
+
+.tx-filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.tx-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tx-filter-btn {
+    background: linear-gradient(145deg, rgba(26, 29, 46, 0.9), rgba(15, 18, 25, 0.95));
+    border: 2px solid rgba(100, 100, 150, 0.3);
+    color: #9ca3af;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tx-filter-btn:hover {
+    border-color: #ffd86b;
+    color: #ffd86b;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 216, 110, 0.2);
+}
+
+.tx-filter-btn.active {
+    background: linear-gradient(135deg, #ffd86b, #f59e0b);
+    border-color: #ffd86b;
+    color: #000;
+    font-weight: 600;
+    box-shadow: 0 5px 25px rgba(255, 216, 110, 0.4);
+}
+
+.filter-icon {
+    font-size: 1.1rem;
+}
+
+.tx-clear-btn {
+    background: transparent;
+    border: 2px solid rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tx-clear-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    transform: translateY(-2px);
+}
+
+/* ============================================================
+   TABLE WRAPPER
+=============================================================== */
+
+.tx-table-wrapper {
+    background: linear-gradient(145deg, rgba(26, 29, 46, 0.9), rgba(15, 18, 25, 0.95));
+    border-radius: 20px;
+    border: 2px solid rgba(255, 216, 110, 0.15);
+    overflow: hidden;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 1;
+}
+
+.tx-table-container {
+    overflow-x: auto;
+}
+
+/* ============================================================
+   TABLE STYLES
+=============================================================== */
+
+.tx-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tx-table thead {
+    background: linear-gradient(90deg, rgba(10, 12, 16, 0.95), rgba(26, 29, 46, 0.95));
+}
+
+.tx-table th {
+    padding: 18px 15px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #ffd86b;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    border-bottom: 2px solid rgba(255, 216, 110, 0.2);
+}
+
+.tx-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid rgba(100, 100, 150, 0.1);
+    vertical-align: middle;
+}
+
+.tx-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.tx-table tbody tr:hover {
+    background: rgba(255, 216, 110, 0.05);
+    cursor: pointer;
+}
+
+/* PVP Row Highlighting */
+.tx-table tbody tr.pvp-win-row {
+    background: linear-gradient(90deg, rgba(34, 197, 94, 0.08), transparent);
+    border-left: 3px solid #22c55e;
+}
+
+.tx-table tbody tr.pvp-win-row:hover {
+    background: linear-gradient(90deg, rgba(34, 197, 94, 0.15), rgba(255, 216, 110, 0.05));
+}
+
+.tx-table tbody tr.pvp-loss-row {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.08), transparent);
+    border-left: 3px solid #ef4444;
+}
+
+.tx-table tbody tr.pvp-loss-row:hover {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.15), rgba(255, 216, 110, 0.05));
+}
+
+/* ============================================================
+   TYPE BADGES
+=============================================================== */
+
+.tx-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 25px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.tx-type-icon {
+    font-size: 1rem;
+}
+
+.tx-type-label {
+    font-size: 0.7rem;
+}
+
+.tx-type-badge.market-buy {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.tx-type-badge.p2p-buy {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.tx-type-badge.p2p-sell {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.tx-type-badge.p2p-list {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.1));
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.tx-type-badge.p2p-delist {
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.2), rgba(156, 163, 175, 0.1));
+    color: #9ca3af;
+    border: 1px solid rgba(156, 163, 175, 0.4);
+}
+
+.tx-type-badge.battle-entry {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.tx-type-badge.battle-win {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.1));
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.5);
+    animation: winGlow 2s ease-in-out infinite;
+}
+
+.tx-type-badge.battle-loss {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* PVP Specific Badges */
+.tx-type-badge.pvp-win {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.4), rgba(59, 130, 246, 0.2));
+    color: #22c55e;
+    border: 2px solid rgba(34, 197, 94, 0.6);
+    animation: pvpWinGlow 2s ease-in-out infinite;
+    font-weight: 700;
+}
+
+.tx-type-badge.pvp-loss {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(168, 85, 247, 0.2));
+    color: #ef4444;
+    border: 2px solid rgba(239, 68, 68, 0.6);
+    font-weight: 700;
+}
+
+@keyframes winGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+    }
+}
+
+@keyframes pvpWinGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(34, 197, 94, 0.4), 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(34, 197, 94, 0.7), 0 0 40px rgba(59, 130, 246, 0.4);
+    }
+}
+
+/* ============================================================
+   POKEMON CELL - ENHANCED WITH SPRITES
+=============================================================== */
+
+.tx-pokemon-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tx-pokemon-sprite-wrapper {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.tx-pokemon-sprite {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
+.tx-no-sprite {
+    font-size: 1.5rem;
+    color: #6b7280;
+}
+
+/* Lost Pokemon - Grayscale effect */
+.tx-pokemon-sprite-wrapper.lost-pokemon {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.tx-pokemon-sprite-wrapper.lost-pokemon .tx-pokemon-sprite {
+    filter: grayscale(100%) opacity(0.7);
+}
+
+.tx-pokemon-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tx-pokemon-name {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.tx-pokemon-name.lost-name {
+    color: #9ca3af;
+    text-decoration: line-through;
+    text-decoration-color: #ef4444;
+}
+
+.tx-pokemon-rarity {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.tx-pokemon-rarity.common {
+    color: #9ca3af;
+}
+
+.tx-pokemon-rarity.rare {
+    color: #60a5fa;
+}
+
+.tx-pokemon-rarity.epic {
+    color: #a855f7;
+}
+
+.tx-pokemon-rarity.legendary {
+    color: #fbbf24;
+}
+
+.tx-pokemon-rarity.mythical {
+    color: #ec4899;
+}
+
+.tx-pokemon-rarity.divine {
+    color: #fff;
+    text-shadow: 0 0 10px #fbbf24, 0 0 20px #fff;
+}
+
+.tx-pokemon-level {
+    font-size: 0.65rem;
+    color: #6b7280;
+}
+
+/* ============================================================
+   AMOUNT CELL
+=============================================================== */
+
+.tx-amount {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.tx-amount.positive {
+    color: #22c55e;
+}
+
+.tx-amount.positive::before {
+    content: '+';
+}
+
+.tx-amount.negative {
+    color: #ef4444;
+}
+
+.tx-amount.neutral {
+    color: #9ca3af;
+}
+
+.tx-currency {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-left: 4px;
+}
+
+/* ============================================================
+   DETAILS CELL
+=============================================================== */
+
+.tx-details {
+    color: #9ca3af;
+    font-size: 0.85rem;
+}
+
+.tx-details-main {
+    color: #fff;
+    display: block;
+    font-weight: 500;
+}
+
+.tx-details-sub {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    display: block;
+    margin-top: 2px;
+}
+
+.tx-details-sub.loss-warning {
+    color: #ef4444;
+    opacity: 1;
+    font-weight: 600;
+}
+
+/* ============================================================
+   STATUS BADGE
+=============================================================== */
+
+.tx-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tx-status.success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.tx-status.pending {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    animation: pulse 1.5s infinite;
+}
+
+.tx-status.failed {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.tx-status.cancelled {
+    background: rgba(156, 163, 175, 0.2);
+    color: #9ca3af;
+    border: 1px solid rgba(156, 163, 175, 0.3);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ============================================================
+   TIME CELL
+=============================================================== */
+
+.tx-time {
+    color: #9ca3af;
+    font-size: 0.8rem;
+}
+
+.tx-time-relative {
+    display: block;
+    color: #fff;
+    font-weight: 500;
+}
+
+.tx-time-absolute {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.6;
+    margin-top: 2px;
+}
+
+/* ============================================================
+   EMPTY STATE
+=============================================================== */
+
+.tx-empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.tx-empty-icon {
+    font-size: 5rem;
+    margin-bottom: 25px;
+    opacity: 0.5;
+}
+
+.tx-empty-state h3 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.2rem;
+    color: #ffd86b;
+    margin-bottom: 15px;
+}
+
+.tx-empty-state p {
+    color: #9ca3af;
+    margin-bottom: 25px;
+}
+
+.tx-empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+   LOADING STATE
+=============================================================== */
+
+.tx-loading {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.tx-loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 216, 110, 0.2);
+    border-top-color: #ffd86b;
+    border-radius: 50%;
+    margin: 0 auto 25px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.tx-loading p {
+    color: #9ca3af;
+}
+
+/* ============================================================
+   PAGINATION
+=============================================================== */
+
+.tx-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+    padding: 20px;
+}
+
+.tx-page-btn {
+    background: linear-gradient(145deg, rgba(26, 29, 46, 0.9), rgba(15, 18, 25, 0.95));
+    border: 2px solid rgba(255, 216, 110, 0.3);
+    color: #ffd86b;
+    padding: 12px 25px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.tx-page-btn:hover:not(:disabled) {
+    background: rgba(255, 216, 110, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 216, 110, 0.2);
+}
+
+.tx-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.tx-page-info {
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+.tx-page-info span {
+    color: #ffd86b;
+    font-weight: 600;
+}
+
+/* ============================================================
+   MODAL
+=============================================================== */
+
+.tx-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.tx-modal-content {
+    background: linear-gradient(145deg, #1a1d2e, #0f1219);
+    border: 3px solid #ffd86b;
+    border-radius: 24px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 0 60px rgba(255, 216, 110, 0.3);
+}
+
+.tx-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px;
+    border-bottom: 1px solid rgba(255, 216, 110, 0.15);
+}
+
+.tx-modal-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.9rem;
+    color: #ffd86b;
+}
+
+.tx-modal-close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.tx-modal-close:hover {
+    color: #ef4444;
+}
+
+.tx-modal-body {
+    padding: 25px;
+}
+
+/* Modal Pokemon Header */
+.tx-modal-pokemon-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tx-modal-pokemon-header.lost-pokemon-header {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.tx-modal-sprite-wrapper {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.tx-modal-sprite-wrapper.lost-pokemon {
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.tx-modal-sprite-wrapper.lost-pokemon .tx-modal-sprite {
+    filter: grayscale(100%) opacity(0.6);
+}
+
+.tx-modal-sprite {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+.tx-modal-no-sprite {
+    font-size: 2rem;
+    color: #6b7280;
+}
+
+.tx-modal-pokemon-info {
+    flex: 1;
+}
+
+.tx-modal-pokemon-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.tx-modal-pokemon-name.lost-name {
+    color: #9ca3af;
+    text-decoration: line-through;
+    text-decoration-color: #ef4444;
+}
+
+.tx-modal-pokemon-rarity {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.tx-modal-pokemon-rarity.common {
+    color: #9ca3af;
+}
+
+.tx-modal-pokemon-rarity.rare {
+    color: #60a5fa;
+}
+
+.tx-modal-pokemon-rarity.epic {
+    color: #a855f7;
+}
+
+.tx-modal-pokemon-rarity.legendary {
+    color: #fbbf24;
+}
+
+.tx-modal-pokemon-rarity.mythical {
+    color: #ec4899;
+}
+
+.tx-modal-pokemon-rarity.divine {
+    color: #fff;
+    text-shadow: 0 0 10px #fbbf24;
+}
+
+.tx-modal-pokemon-level {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.tx-modal-lost-badge {
+    margin-top: 8px;
+    padding: 5px 12px;
+    background: rgba(239, 68, 68, 0.3);
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+}
+
+/* Modal Detail Rows */
+.tx-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(100, 100, 150, 0.1);
+}
+
+.tx-detail-row:last-child {
+    border-bottom: none;
+}
+
+.tx-detail-label {
+    color: #9ca3af;
+    font-size: 0.85rem;
+}
+
+.tx-detail-value {
+    color: #fff;
+    font-weight: 500;
+    text-align: right;
+}
+
+/* ============================================================
+   BONUS TRANSACTION TYPES
+=============================================================== */
+
+/* Welcome Bonus */
+.tx-type-badge.welcome-bonus {
+    background: linear-gradient(135deg, #ffd86b, #f59e0b);
+    border: 1px solid #fcd34d;
+    color: #000;
+    font-weight: 700;
+    animation: bonusGlow 2s ease-in-out infinite;
+}
+
+@keyframes bonusGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(255, 216, 110, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(255, 216, 110, 0.8);
+    }
+}
+
+/* Bonus row highlight */
+.bonus-row {
+    border-left: 3px solid #ffd86b;
+    background: linear-gradient(90deg, rgba(255, 216, 110, 0.05), transparent);
+}
+
+.bonus-row:hover {
+    background: linear-gradient(90deg, rgba(255, 216, 110, 0.15), transparent);
+}
+
+/* Daily Bonus */
+.tx-type-badge.daily-bonus {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    border: 1px solid #93c5fd;
+    color: #fff;
+}
+
+/* Referral Bonus */
+.tx-type-badge.referral-bonus {
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    border: 1px solid #c084fc;
+    color: #fff;
+}
+
+/* PVP Bet */
+.tx-type-badge.pvp-bet {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border: 1px solid #fb923c;
+    color: #fff;
+}
+
+/* ============================================================
+   RESPONSIVE
+=============================================================== */
+
+@media (max-width: 768px) {
+    .tx-title {
+        font-size: 1rem;
+    }
+
+    .tx-stats {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tx-filter-group {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tx-clear-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .tx-table th,
+    .tx-table td {
+        padding: 12px 10px;
+        font-size: 0.8rem;
+    }
+
+    .th-details,
+    .tx-table td:nth-child(4) {
+        display: none;
+    }
+
+    .tx-pokemon-sprite-wrapper {
+        width: 40px;
+        height: 40px;
+    }
+
+    .tx-pokemon-sprite {
+        width: 35px;
+        height: 35px;
+    }
+
+    .tx-type-badge {
+        padding: 6px 10px;
+    }
+
+    .tx-type-label {
+        display: none;
+    }
+
+    .tx-type-icon {
+        font-size: 1.2rem;
+    }
+}

@@ -1,0 +1,821 @@
+/* ============================================================
+   POKECIRCUIT ARENA - PVP LOBBY STYLES
+   Epic battle arena lobby with neon effects
+=============================================================== */
+
+/* ============================================================
+   MAIN CONTAINER
+=============================================================== */
+
+.pvp-lobby-container {
+    min-height: calc(100vh - 80px);
+    padding: 40px 20px;
+    background:
+        radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(239, 68, 68, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #0a0c10 0%, #111827 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated background particles */
+.pvp-lobby-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255, 216, 110, 0.3), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(139, 92, 246, 0.3), transparent),
+        radial-gradient(2px 2px at 50px 160px, rgba(239, 68, 68, 0.3), transparent),
+        radial-gradient(2px 2px at 90px 40px, rgba(255, 216, 110, 0.3), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(59, 130, 246, 0.3), transparent);
+    background-size: 200px 200px;
+    animation: sparkle 20s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes sparkle {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-200px);
+    }
+}
+
+/* ============================================================
+   HERO SECTION
+=============================================================== */
+
+.pvp-hero {
+    text-align: center;
+    margin-bottom: 50px;
+    position: relative;
+    z-index: 1;
+}
+
+.pvp-hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.pvp-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.pvp-icon {
+    font-size: 4rem;
+    animation: swordClash 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(255, 216, 110, 0.6));
+}
+
+.pvp-icon:first-child {
+    transform: scaleX(-1);
+    animation-delay: 0.1s;
+}
+
+@keyframes swordClash {
+
+    0%,
+    100% {
+        transform: translateX(0) rotate(0deg);
+    }
+
+    25% {
+        transform: translateX(10px) rotate(10deg);
+    }
+
+    50% {
+        transform: translateX(0) rotate(0deg);
+    }
+
+    75% {
+        transform: translateX(-10px) rotate(-10deg);
+    }
+}
+
+.pvp-icon:first-child {
+    animation-name: swordClashReverse;
+}
+
+@keyframes swordClashReverse {
+
+    0%,
+    100% {
+        transform: scaleX(-1) translateX(0) rotate(0deg);
+    }
+
+    25% {
+        transform: scaleX(-1) translateX(-10px) rotate(-10deg);
+    }
+
+    50% {
+        transform: scaleX(-1) translateX(0) rotate(0deg);
+    }
+
+    75% {
+        transform: scaleX(-1) translateX(10px) rotate(10deg);
+    }
+}
+
+.pvp-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 2.5rem;
+    color: #ffd86b;
+    text-shadow:
+        0 0 20px rgba(255, 216, 110, 0.8),
+        0 0 40px rgba(255, 216, 110, 0.4),
+        0 4px 0 #b8860b;
+    margin-bottom: 15px;
+    letter-spacing: 2px;
+}
+
+.pvp-subtitle {
+    font-size: 1.2rem;
+    color: #9ca3af;
+    margin-bottom: 25px;
+}
+
+.pvp-warning-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 30px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 2px solid #ef4444;
+    border-radius: 12px;
+    color: #fca5a5;
+    font-weight: 600;
+    animation: warningPulse 2s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+    }
+}
+
+.warning-icon {
+    font-size: 1.5rem;
+    animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(-10deg);
+    }
+
+    75% {
+        transform: rotate(10deg);
+    }
+}
+
+/* ============================================================
+   ACTION CARDS SECTION
+=============================================================== */
+
+.pvp-actions {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto 60px;
+    position: relative;
+    z-index: 1;
+}
+
+.pvp-action-card {
+    flex: 1;
+    max-width: 450px;
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pvp-action-card:hover {
+    transform: translateY(-8px);
+}
+
+.card-glow {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 26px;
+    z-index: -1;
+}
+
+.create-card .card-glow {
+    background: linear-gradient(135deg, #22c55e, #16a34a, #22c55e);
+    background-size: 200% 200%;
+    animation: glowShift 3s ease infinite;
+}
+
+.join-card .card-glow {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8, #3b82f6);
+    background-size: 200% 200%;
+    animation: glowShift 3s ease infinite;
+}
+
+@keyframes glowShift {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.card-content {
+    background: linear-gradient(145deg, #1a1d2e, #0f1219);
+    padding: 40px 30px;
+    border-radius: 24px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+}
+
+.card-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.3rem;
+    color: #fff;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.card-desc {
+    color: #9ca3af;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+}
+
+/* Bet Selector */
+.bet-selector {
+    margin-bottom: 30px;
+}
+
+.bet-selector label {
+    display: block;
+    color: #ffd86b;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.bet-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.bet-btn {
+    padding: 14px 10px;
+    background: #1f2937;
+    border: 2px solid #374151;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.bet-btn span {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.bet-btn:hover {
+    border-color: #ffd86b;
+    background: #2d3748;
+}
+
+.bet-btn.selected {
+    border-color: #ffd86b;
+    background: rgba(255, 216, 110, 0.15);
+    box-shadow: 0 0 20px rgba(255, 216, 110, 0.3);
+}
+
+.bet-btn.selected span {
+    color: #ffd86b;
+}
+
+/* Room Code Input */
+.room-code-input {
+    margin-bottom: 30px;
+}
+
+.room-code-input label {
+    display: block;
+    color: #ffd86b;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.code-input-wrapper {
+    position: relative;
+}
+
+.code-input-wrapper input {
+    width: 100%;
+    padding: 20px;
+    background: #1f2937;
+    border: 2px solid #374151;
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.8rem;
+    text-align: center;
+    letter-spacing: 12px;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+.code-input-wrapper input::placeholder {
+    color: #4b5563;
+    letter-spacing: 12px;
+}
+
+.code-input-wrapper input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Main Buttons */
+.pvp-main-btn {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: auto;
+}
+
+.create-btn {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+}
+
+.create-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(34, 197, 94, 0.6);
+}
+
+.join-btn {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+}
+
+.join-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(59, 130, 246, 0.6);
+}
+
+.pvp-main-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+/* VS Divider */
+.vs-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.vs-text {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.5rem;
+    color: #4b5563;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================
+   RULES SECTION
+=============================================================== */
+
+.pvp-rules {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px;
+    background: rgba(17, 20, 28, 0.8);
+    border: 2px solid rgba(255, 216, 110, 0.2);
+    border-radius: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.rules-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+    color: #ffd86b;
+    text-align: center;
+    margin-bottom: 25px;
+    text-shadow: 0 0 10px rgba(255, 216, 110, 0.5);
+}
+
+.rules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.rule-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rule-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.rule-text {
+    color: #d1d5db;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* ============================================================
+   MODALS
+=============================================================== */
+
+.pvp-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(8px);
+}
+
+.pvp-modal.show {
+    display: flex;
+}
+
+.pvp-modal-content {
+    background: linear-gradient(145deg, #1a1d2e, #0f1219);
+    border: 3px solid #ffd86b;
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(255, 216, 110, 0.3);
+    animation: modalSlide 0.3s ease;
+}
+
+@keyframes modalSlide {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header h2 {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.2rem;
+    color: #ffd86b;
+    margin-bottom: 25px;
+    text-shadow: 0 0 15px rgba(255, 216, 110, 0.5);
+}
+
+.modal-header.error h2 {
+    color: #ef4444;
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+.modal-body {
+    margin-bottom: 25px;
+}
+
+.modal-body p {
+    color: #9ca3af;
+    margin-bottom: 20px;
+}
+
+/* Room Code Display */
+.room-code-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.room-code-display span {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 2.5rem;
+    color: #22c55e;
+    letter-spacing: 10px;
+    text-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+    padding: 20px 30px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 2px solid #22c55e;
+    border-radius: 16px;
+}
+
+.copy-btn {
+    padding: 15px;
+    background: #1f2937;
+    border: 2px solid #374151;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: #374151;
+    border-color: #ffd86b;
+}
+
+/* Bet Display */
+.bet-display {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    color: #9ca3af;
+    margin-bottom: 25px;
+}
+
+.bet-display strong {
+    color: #ffd86b;
+}
+
+/* Waiting Status */
+.waiting-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    color: #9ca3af;
+}
+
+.waiting-spinner,
+.joining-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #374151;
+    border-top-color: #ffd86b;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Opponent Preview */
+.opponent-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    margin-bottom: 25px;
+}
+
+.opponent-avatar {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.opponent-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.opponent-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.opponent-wallet {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-family: monospace;
+}
+
+/* Battle Terms */
+.battle-terms {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.term-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    color: #9ca3af;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.term-row:last-child {
+    border-bottom: none;
+}
+
+.term-row strong {
+    color: #ffd86b;
+}
+
+.term-row.warning strong {
+    color: #ef4444;
+}
+
+.confirm-question {
+    font-size: 1.1rem;
+    color: #fff;
+    margin-top: 20px;
+}
+
+/* Modal Buttons */
+.modal-footer {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.cancel-btn,
+.decline-btn,
+.ok-btn {
+    padding: 14px 30px;
+    background: #374151;
+    border: 2px solid #4b5563;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancel-btn:hover,
+.decline-btn:hover,
+.ok-btn:hover {
+    background: #4b5563;
+}
+
+.accept-btn {
+    padding: 14px 30px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+}
+
+.accept-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(34, 197, 94, 0.6);
+}
+
+/* ============================================================
+   RESPONSIVE
+=============================================================== */
+
+@media (max-width: 900px) {
+    .pvp-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .pvp-action-card {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .vs-divider {
+        padding: 20px 0;
+    }
+
+    .rules-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pvp-title {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .pvp-title {
+        font-size: 1.3rem;
+    }
+
+    .pvp-icon {
+        font-size: 3rem;
+    }
+
+    .rules-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bet-options {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .bet-btn {
+        padding: 12px 8px;
+        font-size: 1rem;
+    }
+
+    .room-code-display span {
+        font-size: 1.8rem;
+        letter-spacing: 6px;
+        padding: 15px 20px;
+    }
+
+    .pvp-modal-content {
+        padding: 25px;
+    }
+}

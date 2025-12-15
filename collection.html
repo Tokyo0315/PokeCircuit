@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokeCircuit Arena - Collection</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Shared styles + collection specific -->
+    <link rel="stylesheet" href="CSS/home.css">
+    <link rel="stylesheet" href="CSS/collection.css">
+</head>
+
+<body class="home-body">
+
+    <!-- NAVBAR -->
+    <header class="pc-navbar">
+        <div class="container pc-nav-container">
+
+            <!-- Logo -->
+            <a href="home.html" class="pc-logo text-decoration-none">
+                <span class="pc-logo-main">Poke</span><span class="pc-logo-circuit">Circuit</span>
+            </a>
+
+            <!-- Hamburger -->
+            <button class="pc-nav-toggle" id="navToggle">☰</button>
+
+            <!-- Menu -->
+            <div class="pc-nav-collapse mt-2" id="navMenu">
+
+                <nav class="pc-nav-links">
+                    <a href="home.html" class="pc-nav-link">Home</a>
+                    <a href="market.html" class="pc-nav-link">Marketplace</a>
+                    <a href="collection.html" class="pc-nav-link pc-nav-active">Collection</a>
+                    <a href="match-setup.html" class="pc-nav-link">Tournament</a>
+                    <a href="pvp-lobby.html" class="pc-nav-link">PVP Battle</a>
+                    <a href="p2p.html" class="pc-nav-link">P2P Market</a>
+                    <a href="transactions.html" class="pc-nav-link">Transactions</a>
+                </nav>
+
+                <!-- Right side -->
+                <div class="pc-nav-right d-flex align-items-center gap-3">
+                    <div class="pc-balance">
+                        <span class="pc-eth-balance">0.0000 ETH</span>
+                        <span class="pc-usd-balance text-warning small">$0.00</span>
+                        <span class="pc-chain-name text-success small"></span>
+                    </div>
+
+                    <!-- PokeChip -->
+                    <div class="pc-pokechip-chip">
+                        <span class="pc-pokechip-icon">◎</span>
+                        <span class="pc-pokechip-label">PKCHP</span>
+                        <span id="pkchpBalance" class="pc-pokechip-amount">0</span>
+                    </div>
+
+                    <button class="pc-wallet-chip" type="button">
+                        No Wallet
+                    </button>
+                    <button class="pc-logout-btn" type="button">
+                        Logout
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="container py-5">
+
+        <!-- HEADER -->
+        <section
+            class="collection-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h1 class="collection-title">MY COLLECTION</h1>
+                <p class="collection-subtitle mb-0">
+                    All Pokémon you’ve purchased with <span class="text-warning">PokeChip</span> or ETH.
+                </p>
+            </div>
+
+            <div class="collection-summary text-md-end">
+                <p class="mb-1">
+                    Total Owned: <span id="collectionCount" class="fw-bold">0</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- FILTERS -->
+        <section class="mb-4">
+            <div class="collection-filter-group">
+
+                <button type="button" class="collection-filter-btn active" data-filter="all">All</button>
+                <button type="button" class="collection-filter-btn" data-filter="common">Common</button>
+                <button type="button" class="collection-filter-btn" data-filter="rare">Rare</button>
+                <button type="button" class="collection-filter-btn" data-filter="epic">Epic</button>
+                <button type="button" class="collection-filter-btn" data-filter="legendary">Legendary</button>
+                <button type="button" class="collection-filter-btn" data-filter="mythical">Mythical</button>
+                <button type="button" class="collection-filter-btn" data-filter="divine">Divine</button>
+
+            </div>
+        </section>
+
+        <!-- EMPTY -->
+        <div id="collectionEmpty" class="text-center text-muted d-none mb-5">
+            <p class="fs-5 mt-4">You don’t own any Pokémon yet.</p>
+            <a href="market.html" class="btn btn-warning btn-lg mt-2">Go to Marketplace</a>
+        </div>
+
+        <!-- COLLECTION GRID -->
+        <div id="collectionGrid" class="row g-4">
+            <!-- Cards inserted by JS -->
+        </div>
+
+    </main>
+
+    <!-- SELL MODAL -->
+    <div id="sellModalBackdrop" class="buy-modal-backdrop d-none">
+        <div class="buy-modal">
+            <div class="buy-modal-header">
+                <span class="buy-modal-title">List Pokemon for Sale</span>
+                <button type="button" class="buy-modal-close" id="sellModalClose">&times;</button>
+            </div>
+
+            <div class="buy-modal-body">
+                <div class="buy-modal-left">
+                    <img id="sellModalSprite" src="" class="buy-modal-sprite">
+                </div>
+
+                <div class="sell-modal-right">
+                    <h3 id="sellModalName" class="buy-modal-name"></h3>
+                    <p class="buy-modal-rarity">
+                        Rarity: <span id="sellModalRarity"></span>
+                    </p>
+
+                    <label class="form-label text-light">Set Price (PKCHP):</label>
+                    <input type="number" id="sellModalPrice" class="form-control" min="1" placeholder="Enter price">
+                </div>
+            </div>
+
+            <div class="buy-modal-footer">
+                <button class="btn btn-secondary btn-sm" id="sellModalCancel">Cancel</button>
+                <button class="btn btn-warning btn-sm" id="sellModalConfirm">Confirm Listing</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Scripts -->
+
+    <!-- Load ethers first (for PKCHP / MetaMask) -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+
+    <!-- Global config: same style as market.html -->
+    <script>
+        // CURRENT USER (from home.js login flow)
+        window.CURRENT_USER_ID = localStorage.getItem("CURRENT_USER_ID");
+        window.CURRENT_WALLET_ADDRESS =
+            localStorage.getItem("CURRENT_WALLET_ADDRESS") ||
+            (window.ethereum && window.ethereum.selectedAddress) ||
+            null;
+
+        // PKCHP token config (same address & ABI as home/market)
+        window.PKCHP_ADDRESS = "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
+
+        window.PKCHP_ABI = [
+            {
+                "inputs": [
+                    { "internalType": "address", "name": "account", "type": "address" }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    { "internalType": "uint256", "name": "", "type": "uint256" }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [
+                    { "internalType": "uint8", "name": "", "type": "uint8" }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "internalType": "address", "name": "to", "type": "address" },
+                    { "internalType": "uint256", "name": "amount", "type": "uint256" }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    { "internalType": "bool", "name": "", "type": "bool" }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+    </script>
+
+    <!-- Supabase client + DB helper -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="JavaScript/db.js"></script>
+    <script src="JavaScript/txLogger.js"></script>
+
+    <!-- Game helpers -->
+    <script src="JavaScript/pokeApi.js"></script>
+    <script src="JavaScript/home.js"></script>
+    <script src="JavaScript/collection.js"></script>
+</body>
+
+
+</html>
