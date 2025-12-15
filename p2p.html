@@ -141,47 +141,28 @@
             </div>
         </div>
 
-
-    </main>
-
-    <!-- BUY MODAL -->
-    <div id="p2pBuyModalBackdrop" class="buy-modal-backdrop d-none">
-        <div class="buy-modal">
-
-            <div class="buy-modal-header">
-                <span class="buy-modal-title">Confirm Purchase</span>
-                <button class="buy-modal-close" id="p2pBuyModalClose">&times;</button>
-            </div>
-
-            <div class="buy-modal-body">
-                <div class="buy-modal-left">
-                    <img id="p2pBuySprite" class="buy-modal-sprite">
+        <!-- PROCESSING LOCK MODAL -->
+        <div id="p2pProcessingModalBackdrop" class="processing-modal-backdrop d-none">
+            <div class="processing-modal">
+                <div class="processing-modal-header">
+                    <span class="processing-modal-title">Completing Your P2P Trade</span>
                 </div>
-
-                <div class="buy-modal-right">
-                    <h3 id="p2pBuyName" class="buy-modal-name"></h3>
-                    <p class="buy-modal-rarity">
-                        Rarity: <span id="p2pBuyRarity"></span>
-                    </p>
-                    <p>
-                        Seller: <span id="p2pBuySeller" class="text-info"></span>
-                    </p>
-                    <p class="buy-modal-price">
-                        Price:
-                        <span id="p2pBuyPriceValue"></span> PKCHP
-                    </p>
-                    <p class="buy-modal-balance">
-                        Your PKCHP: <span id="p2pBuyBalance"></span>
-                    </p>
+                <div class="processing-modal-body">
+                    <div class="processing-spinner"></div>
+                    <div class="processing-copy">
+                        <p id="p2pProcessingStatus" class="processing-main">
+                            Processing payment...
+                        </p>
+                        <p id="p2pProcessingSub" class="processing-sub">
+                            Keep this tab open while we transfer PKCHP and move the Pokemon.
+                        </p>
+                    </div>
                 </div>
-            </div>
-
-            <div class="buy-modal-footer">
-                <button class="btn btn-secondary btn-sm" id="p2pBuyCancel">Cancel</button>
-                <button class="btn btn-warning btn-sm" id="p2pBuyConfirm">Confirm Purchase</button>
             </div>
         </div>
-    </div>
+
+
+    </main>
 
     <!-- Load ethers first -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>

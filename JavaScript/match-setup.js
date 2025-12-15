@@ -244,7 +244,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             <img src="${mon.sprite}" class="pokemon-img">
 
-            <h3 class="pokemon-name">#${api.id} ${mon.name.toUpperCase()}</h3>
+            <div class="dex-number">#${api.id}</div>
+            <h3 class="pokemon-name">${mon.name.toUpperCase()}</h3>
             <p class="pokemon-types">${api.types.join(", ")}</p>
 
             <div class="stats-box">
@@ -395,3 +396,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadCollection();
   updateSummaryUI();
 });
+
+

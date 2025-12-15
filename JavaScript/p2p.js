@@ -173,6 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     <div class="pokemon-card-inner ${typeClass}">
       <div class="level-badge">Lv. ${level}</div>
+      <div class="dex-number">#${p.id}</div>
 
       <img
         src="${listing.sprite_url || p.sprite}"
@@ -180,9 +181,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         alt="${listing.pokemon_name}"
       >
 
-      <h3 class="pokemon-name">#${
-        p.id
-      } ${listing.pokemon_name.toUpperCase()}</h3>
+      <h3 class="pokemon-name">${listing.pokemon_name.toUpperCase()}</h3>
 
       <p class="pokemon-types">${p.types.join(", ")}</p>
 
@@ -308,6 +307,16 @@ ${
   const buyModalClose = document.getElementById("p2pBuyModalClose");
   const buyModalCancel = document.getElementById("p2pBuyModalCancel");
   const buyModalConfirm = document.getElementById("p2pBuyModalConfirm");
+  const processingModalBackdrop = document.getElementById(
+    "p2pProcessingModalBackdrop"
+  );
+  const processingStatus = document.getElementById("p2pProcessingStatus");
+  const processingSub = document.getElementById("p2pProcessingSub");
+  let isProcessingPurchase = false;
+  const blockUnload = (e) => {
+    e.preventDefault();
+    e.returnValue = "";
+  };
 
   function openBuyModal(listing) {
     pendingListing = listing;
@@ -327,7 +336,27 @@ ${
   }
 
   function closeBuyModal() {
+    if (isProcessingPurchase) return;
     buyModalBackdrop.classList.add("d-none");
+  }
+
+  function showProcessing(statusText, subText) {
+    isProcessingPurchase = true;
+    if (statusText && processingStatus) processingStatus.textContent = statusText;
+    if (subText && processingSub) processingSub.textContent = subText;
+    processingModalBackdrop?.classList.remove("d-none");
+    window.addEventListener("beforeunload", blockUnload);
+  }
+
+  function updateProcessing(statusText, subText) {
+    if (statusText && processingStatus) processingStatus.textContent = statusText;
+    if (subText && processingSub) processingSub.textContent = subText;
+  }
+
+  function hideProcessing() {
+    processingModalBackdrop?.classList.add("d-none");
+    window.removeEventListener("beforeunload", blockUnload);
+    isProcessingPurchase = false;
   }
 
   if (buyModalClose) buyModalClose.onclick = closeBuyModal;
@@ -400,6 +429,11 @@ ${
         return;
       }
 
+      showProcessing(
+        "Processing payment...",
+        "Keep this tab open until the trade completes."
+      );
+
       try {
         await paySellerOnChain(pendingListing);
 
@@ -412,6 +446,11 @@ ${
         if (!CURRENT_USER_ID) {
           throw new Error("No CURRENT_USER_ID set for buyer.");
         }
+
+        updateProcessing(
+          "Adding Pokemon to your Collection...",
+          "Saving purchase to your account."
+        );
 
         const { error: insertError } = await supabase
           .from("user_pokemon")
@@ -433,8 +472,13 @@ ${
 
         if (insertError) {
           console.error("Error inserting into user_pokemon:", insertError);
-          throw new Error("Failed to add Pokémon to your collection.");
+          throw new Error("Failed to add PokAcmon to your collection.");
         }
+
+        updateProcessing(
+          "Finalizing trade...",
+          "Cleaning up listing and logging the transaction."
+        );
 
         const { error: deleteError } = await supabase
           .from("p2p_listings")
@@ -450,16 +494,21 @@ ${
         await loadListings();
         // Log P2P buy transaction
         if (window.logP2PBuy) {
-          await window.logP2PBuy(pendingListing, price, pendingListing.seller_wallet);
+          await window.logP2PBuy(
+            pendingListing,
+            price,
+            pendingListing.seller_wallet
+          );
         }
+        hideProcessing();
         alert("Purchase complete! Check your Collection page.");
       } catch (err) {
-    console.error("P2P purchase failed:", err);
-    alert("Purchase failed:\n\n" + (err?.message || err || "Unknown error"));
-}
+        console.error("P2P purchase failed:", err);
+        hideProcessing();
+        alert("Purchase failed:\n\n" + (err?.message || err || "Unknown error"));
+      }
     });
   }
-
   await loadWalletBalance();
   await loadListings();
 });

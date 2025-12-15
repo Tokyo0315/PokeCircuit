@@ -733,6 +733,15 @@ section,
     color: #fefce8;
 }
 
+.market-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.25rem;
+}
+
 /* Divine rarity badge */
 .rarity-divine {
     background: linear-gradient(135deg, #faf5ff, #facc15, #f97316) !important;
@@ -864,6 +873,87 @@ section,
     }
 }
 
+/* ============================================================
+   PROCESSING (BLOCKING) MODAL
+=============================================================== */
+
+.processing-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    backdrop-filter: blur(10px);
+}
+
+.processing-modal {
+    width: min(30rem, 92%);
+    background: linear-gradient(145deg, #10131f, #0a0c12);
+    border-radius: 1.25rem;
+    border: 2px solid #facc1588;
+    box-shadow: 0 0 50px rgba(250, 204, 21, 0.25);
+    color: #e5e7eb;
+    padding: 1.5rem;
+}
+
+.processing-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.processing-modal-title {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.85rem;
+    letter-spacing: 0.08rem;
+    text-transform: uppercase;
+    color: #facc15;
+}
+
+.processing-modal-body {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.processing-spinner {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    border: 4px solid rgba(250, 204, 21, 0.2);
+    border-top-color: #facc15;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
+}
+
+.processing-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.processing-main {
+    margin: 0;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.4;
+}
+
+.processing-sub {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Buy Button on Card */
 .pokemon-card-tcg .buy-btn {
     border-radius: 999px;
@@ -903,13 +993,14 @@ section,
     display: inline-block;
     padding: 10px 18px;
     border-radius: 8px;
-    background: rgba(0, 0, 0, 0.45);
-    color: #00eaff;
+    background: rgba(0, 0, 0, 0.55);
+    color: #facc15;
     font-family: "Press Start 2P", sans-serif;
     font-size: 0.75rem;
     letter-spacing: 1px;
-    border: 2px solid #00eaff55;
-    box-shadow: 0 0 12px #00eaff66, inset 0 0 8px #00eaff33;
+    border: 2px solid #facc1575;
+    box-shadow: 0 0 14px rgba(250, 204, 21, 0.35), inset 0 0 10px rgba(250, 204, 21, 0.25);
+    white-space: nowrap;
 }
 
 #refreshTimer {
@@ -918,15 +1009,15 @@ section,
 
 @keyframes timerPulse {
     0% {
-        text-shadow: 0 0 3px #00eaff;
+        text-shadow: 0 0 3px #facc15;
     }
 
     50% {
-        text-shadow: 0 0 12px #00eaff;
+        text-shadow: 0 0 12px #facc15;
     }
 
     100% {
-        text-shadow: 0 0 3px #00eaff;
+        text-shadow: 0 0 3px #facc15;
     }
 }
 
@@ -1087,6 +1178,17 @@ section,
 
     .featured-img {
         width: min(260px, 80%);
+    }
+
+    .market-filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .market-timer {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
     }
 
     .market-filter-group {

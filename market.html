@@ -76,10 +76,6 @@
                 Browse Pokémons from all regions.
             </p>
 
-            <div class="market-timer text-center mt-3 mb-3">
-                <span id="refreshTimer">Next refresh in 02:00</span>
-            </div>
-
             <!-- FEATURED POKEMON SECTION -->
             <section class="featured-section mb-5">
                 <div class="featured-header">
@@ -106,30 +102,36 @@
                 </div>
             </section>
 
-            <!-- Rarity Filter -->
-            <div class="btn-group market-filter-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-light market-filter-btn active" data-filter="all">
-                    All
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-success market-filter-btn" data-filter="common">
-                    Common
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-warning market-filter-btn" data-filter="rare">
-                    Rare
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-epic market-filter-btn" data-filter="epic">
-                    Epic
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-legendary market-filter-btn"
-                    data-filter="legendary">
-                    Legendary
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-pink market-filter-btn" data-filter="mythical">
-                    Mythical
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-light market-filter-btn" data-filter="divine">
-                    Divine
-                </button>
+            <!-- Rarity Filter + Timer Row -->
+            <div class="market-filter-row">
+                <div class="btn-group market-filter-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-light market-filter-btn active" data-filter="all">
+                        All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success market-filter-btn" data-filter="common">
+                        Common
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning market-filter-btn" data-filter="rare">
+                        Rare
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-epic market-filter-btn" data-filter="epic">
+                        Epic
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-legendary market-filter-btn"
+                        data-filter="legendary">
+                        Legendary
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-pink market-filter-btn" data-filter="mythical">
+                        Mythical
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-light market-filter-btn" data-filter="divine">
+                        Divine
+                    </button>
+                </div>
+
+                <div class="market-timer market-timer-gold">
+                    <span id="refreshTimer">Next refresh in 02:00</span>
+                </div>
             </div>
         </section>
 
@@ -177,6 +179,26 @@
                 <button type="button" class="btn btn-sm btn-warning" id="buyModalConfirm">
                     Confirm Purchase
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROCESSING LOCK MODAL -->
+    <div id="processingModalBackdrop" class="processing-modal-backdrop d-none">
+        <div class="processing-modal">
+            <div class="processing-modal-header">
+                <span class="processing-modal-title">Completing Your Purchase</span>
+            </div>
+            <div class="processing-modal-body">
+                <div class="processing-spinner"></div>
+                <div class="processing-copy">
+                    <p id="processingStatusText" class="processing-main">
+                        Finalizing payment and adding your Pokemon to Collection...
+                    </p>
+                    <p id="processingSubText" class="processing-sub">
+                        Keep this tab open. You will be redirected to Collection when done.
+                    </p>
+                </div>
             </div>
         </div>
     </div>

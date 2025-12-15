@@ -1,4 +1,4 @@
-// COLLECTION PAGE WITH EXP SYSTEM
+﻿// COLLECTION PAGE WITH EXP SYSTEM
 
 document.addEventListener("DOMContentLoaded", async () => {
   const grid = document.getElementById("collectionGrid");
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         .single();
 
       if (error) {
-        console.warn("Wallet missing → creating new 1000 PokeChip fallback");
+        console.warn("Wallet missing - creating new 1000 PokeChip fallback");
 
         const { data: newRow } = await supabase
           .from("user_wallet")
@@ -153,19 +153,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const expData = getExpProgress(entry.exp, entry.level);
 
-        const card = document.createElement("div");
-        card.className = "col-12 col-sm-6 col-md-4 col-lg-3";
+    const card = document.createElement("div");
+    card.className = "col-12 col-sm-6 col-md-4 col-lg-3";
 
-        card.innerHTML = `
+    card.innerHTML = `
   <div class="pokemon-card-tcg">
     <div class="rarity-badge ${rarityClass}">${entry.rarity}</div>
 
     <div class="pokemon-card-inner ${typeClass}">
       <div class="level-badge">Lv. ${entry.level}</div>
+      <div class="dex-number">#${p.id}</div>
 
       <img src="${entry.sprite}" class="pokemon-img">
 
-      <h3 class="pokemon-name">#${p.id} ${entry.name.toUpperCase()}</h3>
+      <h3 class="pokemon-name">${entry.name.toUpperCase()}</h3>
       <p class="pokemon-types">${p.types.join(", ")}</p>
 
       <div class="stats-box">
@@ -183,7 +184,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
-      <div class="collection-price">◎ Owned</div>
+      <div class="collection-price">PKCHP Owned</div>
       <div class="collection-time">Acquired: ${formatDate(
         entry.acquiredAt
       )}</div>
@@ -206,7 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         grid.appendChild(card);
       } catch (err) {
-        console.error("Error rendering Pokémon:", entry.name, err);
+                console.error("Error rendering Pokemon:", entry.name, err);
       }
     }
   }
@@ -246,8 +247,39 @@ document.addEventListener("DOMContentLoaded", async () => {
   const sellModalClose = document.getElementById("sellModalClose");
   const sellModalCancel = document.getElementById("sellModalCancel");
   const sellModalConfirm = document.getElementById("sellModalConfirm");
+  const processingBackdrop = document.getElementById(
+    "collectionProcessingModalBackdrop"
+  );
+  const processingStatus = document.getElementById(
+    "collectionProcessingStatus"
+  );
+  const processingSub = document.getElementById("collectionProcessingSub");
 
   let selectedPokemonForSale = null;
+  let isListingProcessing = false;
+  const blockUnload = (e) => {
+    e.preventDefault();
+    e.returnValue = "";
+  };
+
+  const showListingProcessing = (statusText, subText) => {
+    isListingProcessing = true;
+    if (statusText && processingStatus) processingStatus.textContent = statusText;
+    if (subText && processingSub) processingSub.textContent = subText;
+    processingBackdrop?.classList.remove("d-none");
+    window.addEventListener("beforeunload", blockUnload);
+  };
+
+  const updateListingProcessing = (statusText, subText) => {
+    if (statusText && processingStatus) processingStatus.textContent = statusText;
+    if (subText && processingSub) processingSub.textContent = subText;
+  };
+
+  const hideListingProcessing = () => {
+    processingBackdrop?.classList.add("d-none");
+    window.removeEventListener("beforeunload", blockUnload);
+    isListingProcessing = false;
+  };
 
   grid.addEventListener("click", (e) => {
     const btn = e.target.closest(".sell-btn");
@@ -285,39 +317,51 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   sellModalConfirm.addEventListener("click", async () => {
-    if (!selectedPokemonForSale) return;
+  if (!selectedPokemonForSale) return;
 
-    const price = Number(sellModalPrice.value);
+  const price = Number(sellModalPrice.value);
 
-    if (!price || price <= 0) {
-      alert("Enter a valid PKCHP price.");
-      return;
-    }
+  if (!price || price <= 0) {
+    alert("Enter a valid PKCHP price.");
+    return;
+  }
 
-    const { error: listError } = await supabase.from("p2p_listings").insert([
-      {
-        user_id: CURRENT_USER_ID,
-        seller_id: CURRENT_USER_ID,
-        seller_wallet: window.CURRENT_WALLET_ADDRESS,
-        pokemon_name: selectedPokemonForSale.name,
-        rarity: selectedPokemonForSale.rarity,
-        sprite_url: selectedPokemonForSale.sprite,
-        hp: selectedPokemonForSale.hp,
-        attack: selectedPokemonForSale.attack,
-        defense: selectedPokemonForSale.defense,
-        speed: selectedPokemonForSale.speed,
-        level: selectedPokemonForSale.level,
-        price_pkchp: price,
-        status: "listed",
-        listed_at: new Date().toISOString(),
-      },
-    ]);
+  showListingProcessing(
+    "Posting your listing...",
+    "Keep this tab open while we move your Pokemon to P2P."
+  );
+
+  try {
+    const { error: listError } = await supabase
+      .from("p2p_listings")
+      .insert([
+        {
+          user_id: CURRENT_USER_ID,
+          seller_id: CURRENT_USER_ID,
+          seller_wallet: window.CURRENT_WALLET_ADDRESS,
+          pokemon_name: selectedPokemonForSale.name,
+          rarity: selectedPokemonForSale.rarity,
+          sprite_url: selectedPokemonForSale.sprite,
+          hp: selectedPokemonForSale.hp,
+          attack: selectedPokemonForSale.attack,
+          defense: selectedPokemonForSale.defense,
+          speed: selectedPokemonForSale.speed,
+          level: selectedPokemonForSale.level,
+          price_pkchp: price,
+          status: "listed",
+          listed_at: new Date().toISOString(),
+        },
+      ]);
 
     if (listError) {
-      console.error("❌ Listing failed:", listError);
-      alert("Cannot list Pokémon.\n\n" + listError.message);
-      return;
+      console.error("Listing failed:", listError);
+      throw new Error(listError.message || "Cannot list Pokemon.");
     }
+
+    updateListingProcessing(
+      "Logging and removing from Collection...",
+      "Almost done."
+    );
 
     // Log P2P list transaction
     if (window.logP2PList) {
@@ -329,7 +373,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       .delete()
       .eq("id", selectedPokemonForSale.id);
 
+    hideListingProcessing();
     closeSellModal();
     window.location.reload();
-  });
+  } catch (err) {
+    console.error("Listing failed:", err);
+    hideListingProcessing();
+    alert(
+      "Cannot list this Pokemon right now.\n\n" +
+        (err?.message || "Please try again.")
+    );
+  }
 });
+
+
+
+
+
+});
+
+
+
+
+

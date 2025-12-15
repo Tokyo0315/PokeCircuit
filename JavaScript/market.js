@@ -533,10 +533,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
 
           <div class="level-badge">Lv. 1</div>
+          <div class="dex-number">#${p.id}</div>
 
-          <img src="${p.sprite}" class="pokemon-img">
+      <img src="${p.sprite}" class="pokemon-img">
 
-          <h3 class="pokemon-name">#${p.id} ${p.name}</h3>
+      <h3 class="pokemon-name">${p.name}</h3>
           <p class="pokemon-types">${p.types.join(", ")}</p>
 
           <div class="stats-box">
@@ -579,8 +580,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   const buyModalClose = document.getElementById("buyModalClose");
   const buyModalCancel = document.getElementById("buyModalCancel");
   const buyModalConfirm = document.getElementById("buyModalConfirm");
+  const processingModalBackdrop = document.getElementById(
+    "processingModalBackdrop"
+  );
+  const processingStatusText = document.getElementById("processingStatusText");
+  const processingSubText = document.getElementById("processingSubText");
 
   let pendingPurchase = null;
+  let isProcessingPurchase = false;
+
+  const blockUnload = (e) => {
+    e.preventDefault();
+    e.returnValue = "";
+  };
 
   async function openBuyModal(data) {
     // Refresh on-chain PKCHP before showing modal
@@ -605,8 +617,39 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function closeBuyModal() {
+    if (isProcessingPurchase) return; // keep modal open while processing
     buyModalBackdrop.classList.add("d-none");
     pendingPurchase = null;
+  }
+
+  function showProcessingModal(
+    status = "Processing your purchase...",
+    subText = "Do not close the app until you're redirected to Collection."
+  ) {
+    isProcessingPurchase = true;
+    if (status && processingStatusText) {
+      processingStatusText.textContent = status;
+    }
+    if (subText && processingSubText) {
+      processingSubText.textContent = subText;
+    }
+    processingModalBackdrop.classList.remove("d-none");
+    window.addEventListener("beforeunload", blockUnload);
+  }
+
+  function updateProcessingText(status, subText) {
+    if (status && processingStatusText) {
+      processingStatusText.textContent = status;
+    }
+    if (subText && processingSubText) {
+      processingSubText.textContent = subText;
+    }
+  }
+
+  function hideProcessingModal() {
+    processingModalBackdrop.classList.add("d-none");
+    window.removeEventListener("beforeunload", blockUnload);
+    isProcessingPurchase = false;
   }
 
   buyModalClose.onclick = closeBuyModal;
@@ -627,31 +670,50 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    showProcessingModal(
+      "Processing payment...",
+      "Keep this tab open. We'll send you to your Collection when done."
+    );
+
     // 1. On-chain PKCHP transfer muna
     try {
       await payWithPkchpOnChain(cost);
     } catch (err) {
       console.error("PKCHP on-chain payment failed:", err);
+      hideProcessingModal();
       alert("On-chain PKCHP transfer failed.");
       return; 
     }
 
+    updateProcessingText(
+      "Saving your Pokemon to your Collection...",
+      "Please wait, this keeps the purchase from getting lost."
+    );
+
     // 2. Update local and Supabase mirror ng wallet
-    pokechipBalance -= cost;
-    await savePokechip(); 
-    updateNavbarPokechip(); 
+    try {
+      pokechipBalance -= cost;
+      await savePokechip();
+      updateNavbarPokechip();
 
-    // 3. I-save yung nabili sa user_pokemon
-    await addPokemonToCollectionDB(pendingPurchase);
+      // 3. I-save yung nabili sa user_pokemon
+      await addPokemonToCollectionDB(pendingPurchase);
 
-    // 4. Log transaction
-    if (window.logMarketBuy) {
-      await window.logMarketBuy(pendingPurchase, cost);
+      // 4. Log transaction
+      if (window.logMarketBuy) {
+        await window.logMarketBuy(pendingPurchase, cost);
+      }
+
+      hideProcessingModal();
+      closeBuyModal();
+      window.location.href = "collection.html";
+    } catch (err) {
+      console.error("Error finalizing market purchase:", err);
+      hideProcessingModal();
+      alert(
+        "We couldn't finish adding this Pokemon to your Collection. Please try again."
+      );
     }
-
-    // 4. Close modal then redirect sa Collection page
-    closeBuyModal();
-    window.location.href = "collection.html";
   });
 
   // BUY BUTTON HANDLER (MARKET)

@@ -34,3 +34,6 @@
     background-color: darkslategrey;
     color: black;
 }
+
+.pokemon-card-inner { position: relative; }
+.dex-number { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 12px; background: linear-gradient(135deg, #f9ab03, #b8a61f); color: #fefefe; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.04em; box-shadow: 0 0 12px rgba(234, 148, 18, 0.35); z-index: 2; }
