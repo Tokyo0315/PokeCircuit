@@ -1,6 +1,7 @@
 // ============================================================
 // POKECIRCUIT ARENA - PVP LOBBY SYSTEM
-// Fixed: Username display with proper wallet truncation
+// With Escrow-based Pre-paid Betting
+// Both players deposit PKCHP upfront, winner gets both
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -17,6 +18,93 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "home.html";
     return;
   }
+
+  // Contract addresses
+  const PKCHP_ADDRESS =
+    window.PKCHP_ADDRESS || "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
+  const PVP_ESCROW_ADDRESS =
+    window.PVP_ESCROW_ADDRESS || "0xD0f6fD85dC0B869cD999929989bECC5b115377D1"; // TODO: Add after deployment
+
+  // Contract ABIs
+  const PKCHP_ABI = [
+    {
+      inputs: [
+        { internalType: "address", name: "spender", type: "address" },
+        { internalType: "uint256", name: "amount", type: "uint256" },
+      ],
+      name: "approve",
+      outputs: [{ internalType: "bool", name: "", type: "bool" }],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "address", name: "owner", type: "address" },
+        { internalType: "address", name: "spender", type: "address" },
+      ],
+      name: "allowance",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "address", name: "account", type: "address" }],
+      name: "balanceOf",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [],
+      name: "decimals",
+      outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
+      stateMutability: "view",
+      type: "function",
+    },
+  ];
+
+  const PVP_ESCROW_ABI = [
+    {
+      inputs: [
+        { internalType: "string", name: "_roomCode", type: "string" },
+        { internalType: "uint256", name: "_betAmount", type: "uint256" },
+      ],
+      name: "createRoom",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "string", name: "_roomCode", type: "string" }],
+      name: "joinRoom",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "string", name: "_roomCode", type: "string" }],
+      name: "cancelRoom",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "string", name: "_roomCode", type: "string" }],
+      name: "getRoom",
+      outputs: [
+        { internalType: "address", name: "host", type: "address" },
+        { internalType: "address", name: "guest", type: "address" },
+        { internalType: "uint256", name: "betAmount", type: "uint256" },
+        { internalType: "bool", name: "hostDeposited", type: "bool" },
+        { internalType: "bool", name: "guestDeposited", type: "bool" },
+        { internalType: "bool", name: "isActive", type: "bool" },
+        { internalType: "bool", name: "isFinished", type: "bool" },
+        { internalType: "address", name: "winner", type: "address" },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+  ];
 
   // ============================================================
   // DOM ELEMENTS
@@ -85,17 +173,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     showModal(errorModal);
   }
 
-  // FIXED: Proper wallet truncation
   function shortenWallet(wallet) {
     if (!wallet) return "Unknown";
     if (wallet.length <= 13) return wallet;
     return wallet.slice(0, 6) + "..." + wallet.slice(-4);
   }
 
-  // FIXED: Get display name (username or truncated wallet)
   function getDisplayName(username, wallet) {
     if (username && username !== "Trainer" && username.length > 0) {
-      // Truncate long usernames too
       if (username.length > 15) {
         return username.slice(0, 12) + "...";
       }
@@ -117,11 +202,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const contract = new ethers.Contract(
-        window.PKCHP_ADDRESS,
-        window.PKCHP_ABI,
-        provider
-      );
+      const contract = new ethers.Contract(PKCHP_ADDRESS, PKCHP_ABI, provider);
 
       const raw = await contract.balanceOf(wallet);
       const dec = await contract.decimals();
@@ -134,6 +215,127 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll(".pc-pokechip-amount").forEach((el) => {
       el.textContent = pkchpBalance.toLocaleString();
     });
+  }
+
+  // ============================================================
+  // APPROVE PKCHP FOR ESCROW CONTRACT
+  // ============================================================
+
+  async function approveEscrow(amount) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS) return true;
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const pkchpContract = new ethers.Contract(
+        PKCHP_ADDRESS,
+        PKCHP_ABI,
+        signer
+      );
+
+      const currentAllowance = await pkchpContract.allowance(
+        CURRENT_WALLET,
+        PVP_ESCROW_ADDRESS
+      );
+      const amountWei = ethers.parseUnits(amount.toString(), 18);
+
+      if (currentAllowance >= amountWei) {
+        console.log("Already approved");
+        return true;
+      }
+
+      const tx = await pkchpContract.approve(PVP_ESCROW_ADDRESS, amountWei);
+      await tx.wait();
+      console.log("✓ PKCHP approved for escrow");
+      return true;
+    } catch (err) {
+      console.error("Approve failed:", err);
+      return false;
+    }
+  }
+
+  // ============================================================
+  // DEPOSIT TO ESCROW (CREATE ROOM)
+  // ============================================================
+
+  async function depositToEscrow(roomCode, amount) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
+      console.log("Escrow not configured, using database-only mode");
+      return true;
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const escrowContract = new ethers.Contract(
+        PVP_ESCROW_ADDRESS,
+        PVP_ESCROW_ABI,
+        signer
+      );
+
+      const tx = await escrowContract.createRoom(roomCode, amount);
+      await tx.wait();
+      console.log("✓ Deposited to escrow for room:", roomCode);
+      return true;
+    } catch (err) {
+      console.error("Escrow deposit failed:", err);
+      throw err;
+    }
+  }
+
+  // ============================================================
+  // JOIN ESCROW ROOM
+  // ============================================================
+
+  async function joinEscrowRoom(roomCode) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
+      console.log("Escrow not configured, using database-only mode");
+      return true;
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const escrowContract = new ethers.Contract(
+        PVP_ESCROW_ADDRESS,
+        PVP_ESCROW_ABI,
+        signer
+      );
+
+      const tx = await escrowContract.joinRoom(roomCode);
+      await tx.wait();
+      console.log("✓ Joined escrow room:", roomCode);
+      return true;
+    } catch (err) {
+      console.error("Escrow join failed:", err);
+      throw err;
+    }
+  }
+
+  // ============================================================
+  // CANCEL ESCROW ROOM (REFUND)
+  // ============================================================
+
+  async function cancelEscrowRoom(roomCode) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS) return true;
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const escrowContract = new ethers.Contract(
+        PVP_ESCROW_ADDRESS,
+        PVP_ESCROW_ABI,
+        signer
+      );
+
+      const tx = await escrowContract.cancelRoom(roomCode);
+      await tx.wait();
+      console.log("✓ Cancelled escrow room, refund issued");
+      return true;
+    } catch (err) {
+      console.error("Escrow cancel failed:", err);
+      return false;
+    }
   }
 
   // ============================================================
@@ -174,7 +376,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ============================================================
-  // CREATE ROOM
+  // CREATE ROOM - WITH ESCROW DEPOSIT
   // ============================================================
 
   createRoomBtn.addEventListener("click", async () => {
@@ -184,9 +386,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     createRoomBtn.disabled = true;
-    createRoomBtn.innerHTML = '<span class="btn-icon">⏳</span> CREATING...';
+    createRoomBtn.innerHTML = '<span class="btn-icon">⏳</span> APPROVING...';
 
     try {
+      // Step 1: Approve PKCHP for escrow
+      if (PVP_ESCROW_ADDRESS) {
+        const approved = await approveEscrow(selectedBet);
+        if (!approved) {
+          throw new Error("Failed to approve PKCHP spending");
+        }
+      }
+
+      createRoomBtn.innerHTML =
+        '<span class="btn-icon">⏳</span> DEPOSITING...';
+
+      // Generate unique room code
       let roomCode = generateRoomCode();
       let attempts = 0;
 
@@ -203,7 +417,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         attempts++;
       }
 
-      // Get username - use wallet shorthand as fallback
+      // Step 2: Deposit to escrow contract
+      if (PVP_ESCROW_ADDRESS) {
+        await depositToEscrow(roomCode, selectedBet);
+      }
+
+      createRoomBtn.innerHTML =
+        '<span class="btn-icon">⏳</span> CREATING ROOM...';
+
+      // Step 3: Create room in database
       const { data: userData } = await supabase
         .from("users")
         .select("username")
@@ -235,7 +457,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       displayBetAmount.textContent = `${selectedBet} PKCHP`;
       showModal(roomCreatedModal);
 
+      // Log the deposit transaction
+      if (window.logTransaction) {
+        await window.logTransaction({
+          type: "pvp_bet",
+          amount: -selectedBet,
+          currency: "PKCHP",
+          metadata: { room_code: roomCode, action: "create" },
+        });
+      }
+
       subscribeToRoom(room.id);
+
+      // Refresh balance
+      await loadBalance();
     } catch (err) {
       console.error("Create room error:", err);
       showError("Failed to create room: " + err.message);
@@ -318,13 +553,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ============================================================
-  // CANCEL ROOM
+  // CANCEL ROOM - WITH ESCROW REFUND
   // ============================================================
 
   cancelRoomBtn.addEventListener("click", async () => {
     if (!currentRoomId) return;
 
+    cancelRoomBtn.disabled = true;
+    cancelRoomBtn.textContent = "CANCELLING...";
+
     try {
+      // Cancel escrow and get refund
+      if (PVP_ESCROW_ADDRESS && currentRoomCode) {
+        await cancelEscrowRoom(currentRoomCode);
+      }
+
+      // Update database
       await supabase
         .from("pvp_battle_rooms")
         .update({ status: "cancelled" })
@@ -332,11 +576,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       cleanupSubscription();
       hideModal(roomCreatedModal);
+
+      // Refresh balance
+      await loadBalance();
+
       currentRoomId = null;
       currentRoomCode = null;
     } catch (err) {
       console.error("Cancel room error:", err);
+      showError("Failed to cancel: " + err.message);
     }
+
+    cancelRoomBtn.disabled = false;
+    cancelRoomBtn.textContent = "❌ CANCEL ROOM";
   });
 
   // ============================================================
@@ -392,7 +644,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       hideModal(joiningModal);
       pendingRoom = room;
 
-      // FIXED: Use getDisplayName for proper name display
       opponentName.textContent = getDisplayName(
         room.host_username,
         room.host_wallet
@@ -421,13 +672,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     joinRoomBtn.disabled = true;
   });
 
+  // ============================================================
+  // ACCEPT JOIN - WITH ESCROW DEPOSIT
+  // ============================================================
+
   acceptJoinBtn.addEventListener("click", async () => {
     if (!pendingRoom) return;
 
     acceptJoinBtn.disabled = true;
-    acceptJoinBtn.textContent = "JOINING...";
+    acceptJoinBtn.textContent = "APPROVING...";
 
     try {
+      // Step 1: Approve PKCHP for escrow
+      if (PVP_ESCROW_ADDRESS) {
+        const approved = await approveEscrow(pendingRoom.bet_amount);
+        if (!approved) {
+          throw new Error("Failed to approve PKCHP spending");
+        }
+      }
+
+      acceptJoinBtn.textContent = "DEPOSITING...";
+
+      // Step 2: Deposit to escrow
+      if (PVP_ESCROW_ADDRESS) {
+        await joinEscrowRoom(pendingRoom.room_code);
+      }
+
+      acceptJoinBtn.textContent = "JOINING...";
+
+      // Step 3: Update database
       const { data: userData } = await supabase
         .from("users")
         .select("username")
@@ -449,6 +722,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (error) throw error;
 
+      // Log the deposit transaction
+      if (window.logTransaction) {
+        await window.logTransaction({
+          type: "pvp_bet",
+          amount: -pendingRoom.bet_amount,
+          currency: "PKCHP",
+          metadata: { room_code: pendingRoom.room_code, action: "join" },
+        });
+      }
+
       localStorage.setItem("PVP_ROOM_ID", pendingRoom.id);
       localStorage.setItem("PVP_ROOM_CODE", pendingRoom.room_code);
       localStorage.setItem("PVP_IS_HOST", "false");
@@ -457,11 +740,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       window.location.href = "pvp-select.html";
     } catch (err) {
       console.error("Accept join error:", err);
-      showError("Failed to join room. It may have been cancelled or filled.");
+      showError("Failed to join room: " + err.message);
     }
 
     acceptJoinBtn.disabled = false;
-    acceptJoinBtn.textContent = "⚔️ ACCEPT CHALLENGE";
+    acceptJoinBtn.textContent = "⚔️ ACCEPT & DEPOSIT";
   });
 
   // ============================================================
@@ -492,5 +775,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ============================================================
 
   await loadBalance();
-  console.log("✓ PVP Lobby loaded");
+  console.log("✓ PVP Lobby loaded with Escrow support");
 });
