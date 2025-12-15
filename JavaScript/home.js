@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.addEventListener("click", () => {
         localStorage.removeItem(CURRENT_WALLET_ADDRESS_KEY);
         localStorage.removeItem(CURRENT_USER_ID_KEY);
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       })
     );
   }
