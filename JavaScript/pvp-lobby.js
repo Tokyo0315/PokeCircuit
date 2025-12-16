@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const PKCHP_ADDRESS =
     window.PKCHP_ADDRESS || "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
   const PVP_ESCROW_ADDRESS =
-    window.PVP_ESCROW_ADDRESS || "0xD0f6fD85dC0B869cD999929989bECC5b115377D1"; // TODO: Add after deployment
+    window.PVP_ESCROW_ADDRESS || "0xd9145CCE52D386f254917e481eB44e9943F39138"; // TODO: Add after deployment
 
   // Contract ABIs
   const PKCHP_ABI = [
