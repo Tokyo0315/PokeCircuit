@@ -602,6 +602,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const loserWallet = isHost ? room.guest_wallet : room.host_wallet;
       const expReward = room.exp_reward || 50;
       const rewardAmount = room.bet_amount * 2;
+      const currentLevel = myPokemon.level || 1;
 
       // Step 1: Delete loser's Pokemon
       txMessage.textContent = "Deleting opponent's Pokemon...";
@@ -611,10 +612,24 @@ document.addEventListener("DOMContentLoaded", async () => {
       txMessage.textContent = "Adding EXP to your Pokemon...";
       const newExp = (myPokemon.exp || 0) + expReward;
       const newLevel = Math.floor(newExp / 100) + 1;
+      const levelsGained = Math.max(0, newLevel - currentLevel);
+      const statIncrease = levelsGained * 10;
+
+      const updatePayload = {
+        exp: newExp,
+        level: newLevel,
+      };
+
+      if (levelsGained > 0) {
+        updatePayload.hp = (myPokemon.hp || 100) + statIncrease;
+        updatePayload.attack = (myPokemon.attack || 50) + statIncrease;
+        updatePayload.defense = (myPokemon.defense || 50) + statIncrease;
+        updatePayload.speed = (myPokemon.speed || 50) + statIncrease;
+      }
 
       await supabase
         .from("user_pokemon")
-        .update({ exp: newExp, level: newLevel })
+        .update(updatePayload)
         .eq("id", myPokemon.id);
 
       // Step 3: Try to claim PKCHP from rewards contract

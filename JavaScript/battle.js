@@ -886,16 +886,27 @@ if (playerWon) {
       // Calculate new level based on total EXP
       const levelData = calculateLevelFromExp(newTotalExp);
       const newLevel = levelData.level;
+      const levelsGained = Math.max(0, newLevel - currentLevel);
+      const statIncrease = levelsGained * 10;
+
+      const updatePayload = {
+        level: newLevel,
+        exp: newTotalExp,
+      };
+
+      if (levelsGained > 0) {
+        updatePayload.hp = (mon.hp || 100) + statIncrease;
+        updatePayload.attack = (mon.attack || 50) + statIncrease;
+        updatePayload.defense = (mon.defense || 50) + statIncrease;
+        updatePayload.speed = (mon.speed || 50) + statIncrease;
+      }
       
       console.log(`${mon.name}: Level ${currentLevel} -> ${newLevel}, EXP: ${currentExp} + ${expReward} = ${newTotalExp}`);
       
       try {
         const { data, error } = await supabase
           .from("user_pokemon")
-          .update({
-            level: newLevel,
-            exp: newTotalExp,
-          })
+          .update(updatePayload)
           .eq("id", pokemonId)
           .select();
         
@@ -906,7 +917,11 @@ if (playerWon) {
           console.log(`✓ Updated ${mon.name}:`, data);
           
           if (newLevel > currentLevel) {
-            log(`🎉 ${mon.name} leveled up to Lv.${newLevel}!`, "#fbbf24");
+            const statMsg =
+              statIncrease > 0
+                ? ` (+${statIncrease} to HP/ATK/DEF/SPD)`
+                : "";
+            log(`🎉 ${mon.name} leveled up to Lv.${newLevel}!${statMsg}`, "#fbbf24");
           } else {
             log(`✨ ${mon.name} gained ${expReward} EXP!`, "#22c55e");
           }
