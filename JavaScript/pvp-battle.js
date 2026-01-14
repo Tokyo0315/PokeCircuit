@@ -113,6 +113,36 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ============================================================
+  // EXP/LEVEL HELPERS (keep PVP leveling aligned with PVE logic)
+  // ============================================================
+
+  function getExpForLevel(level) {
+    return level * 100;
+  }
+
+  function getTotalExpToLevel(level) {
+    let total = 0;
+    for (let l = 1; l < level; l++) {
+      total += getExpForLevel(l);
+    }
+    return total;
+  }
+
+  function calculateLevelFromExp(totalExp) {
+    let level = 1;
+    let expNeeded = getExpForLevel(level);
+    let remaining = totalExp;
+
+    while (remaining >= expNeeded && level < 100) {
+      remaining -= expNeeded;
+      level++;
+      expNeeded = getExpForLevel(level);
+    }
+
+    return { level, currentExp: remaining, expToNext: expNeeded };
+  }
+
+  // ============================================================
   // PKCHP TRANSFER FUNCTIONS
   // ============================================================
 
@@ -603,6 +633,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const expReward = room.exp_reward || 50;
       const rewardAmount = room.bet_amount * 2;
       const currentLevel = myPokemon.level || 1;
+      const currentExp = myPokemon.exp || 0;
 
       // Step 1: Delete loser's Pokemon
       txMessage.textContent = "Deleting opponent's Pokemon...";
@@ -610,13 +641,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Step 2: Update winner's Pokemon EXP
       txMessage.textContent = "Adding EXP to your Pokemon...";
-      const newExp = (myPokemon.exp || 0) + expReward;
-      const newLevel = Math.floor(newExp / 100) + 1;
+      // Convert stored level + in-level exp to cumulative exp before adding reward
+      const cumulativeExp = getTotalExpToLevel(currentLevel) + currentExp;
+      const newTotalExp = cumulativeExp + expReward;
+      const levelData = calculateLevelFromExp(newTotalExp);
+      const newLevel = Math.max(currentLevel, levelData.level); // wins should not reduce level
+      const expAtLevelStart = getTotalExpToLevel(newLevel);
+      const storedExpForLevel = Math.max(0, newTotalExp - expAtLevelStart);
       const levelsGained = Math.max(0, newLevel - currentLevel);
       const statIncrease = levelsGained * 10;
 
       const updatePayload = {
-        exp: newExp,
+        exp: storedExpForLevel,
         level: newLevel,
       };
 

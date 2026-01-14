@@ -32,6 +32,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     return { level, currentExp: remainingExp, expToNext: expNeeded };
   }
 
+  // Convert a stored level into total cumulative EXP required to reach it
+  function getTotalExpToLevel(level) {
+    let total = 0;
+    for (let l = 1; l < level; l++) {
+      total += getExpForLevel(l);
+    }
+    return total;
+  }
+
   // =========================================================
   // POKEMON WITH CONFIRMED ANIMATED SPRITES (Gen 1-5)
   // =========================================================
@@ -881,17 +890,23 @@ if (playerWon) {
       
       const currentLevel = mon.level || 1;
       const currentExp = mon.exp || 0;
-      const newTotalExp = currentExp + expReward;
+      // Convert stored level + in-level exp to cumulative exp before adding reward
+      const cumulativeExp = getTotalExpToLevel(currentLevel) + currentExp;
+      const newTotalExp = cumulativeExp + expReward;
       
       // Calculate new level based on total EXP
       const levelData = calculateLevelFromExp(newTotalExp);
-      const newLevel = levelData.level;
+      // Never let a win reduce levels; clamp to at least currentLevel
+      const newLevel = Math.max(currentLevel, levelData.level);
+      // Store exp as progress into the new level (not total cumulative exp)
+      const expAtLevelStart = getTotalExpToLevel(newLevel);
+      const storedExpForLevel = Math.max(0, newTotalExp - expAtLevelStart);
       const levelsGained = Math.max(0, newLevel - currentLevel);
       const statIncrease = levelsGained * 10;
 
       const updatePayload = {
         level: newLevel,
-        exp: newTotalExp,
+        exp: storedExpForLevel,
       };
 
       if (levelsGained > 0) {
