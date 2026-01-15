@@ -651,6 +651,75 @@
 }
 
 /* ============================================================
+   NOTICE MODAL
+=============================================================== */
+
+.battle-notice-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    animation: fadeIn 0.3s ease;
+}
+
+.battle-notice-modal.show {
+    display: flex;
+}
+
+.battle-notice-content {
+    background: linear-gradient(135deg, #151a26, #0b0e14);
+    border: 2px solid #ffd86b;
+    border-radius: 18px;
+    padding: 32px;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 0 35px rgba(255, 216, 110, 0.35);
+}
+
+.battle-notice-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffd86b;
+    margin-bottom: 12px;
+    text-shadow: 0 0 12px rgba(255, 216, 110, 0.5);
+}
+
+.battle-notice-message {
+    font-size: 1rem;
+    color: #e5e7eb;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.battle-notice-btn {
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 2px solid #ffd86b;
+    border-radius: 10px;
+    background: #1b1f2b;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.battle-notice-btn:hover:not(:disabled) {
+    background: #ffd86b;
+    color: #000;
+    box-shadow: 0 0 14px rgba(255, 216, 110, 0.6);
+}
+
+.battle-notice-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============================================================
    TRANSACTION LOADING MODAL
 =============================================================== */
 

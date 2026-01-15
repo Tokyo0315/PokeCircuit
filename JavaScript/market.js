@@ -1,8 +1,26 @@
-// GLOBAL CONSTANTS (localStorage now only used for timers)
-const MARKET_TIMER_KEY = "marketTimer";
+// GLOBAL CONSTANTS - Real-world time based rotation
+const REFRESH_INTERVAL = 120; // 2 minutes in seconds
+const FEATURED_INTERVAL = 300; // 5 minutes in seconds
 
-const REFRESH_INTERVAL = 120; // 2 minutes
-const FEATURED_INTERVAL = 300; // 5 minutes
+// Calculate current time slot based on real-world time
+function getCurrentMarketTimeSlot() {
+  return Math.floor(Date.now() / 1000 / REFRESH_INTERVAL);
+}
+
+function getCurrentFeaturedTimeSlot() {
+  return Math.floor(Date.now() / 1000 / FEATURED_INTERVAL);
+}
+
+// Calculate seconds remaining until next rotation (real-world time)
+function getSecondsUntilNextMarketRotation() {
+  const currentSeconds = Math.floor(Date.now() / 1000);
+  return REFRESH_INTERVAL - (currentSeconds % REFRESH_INTERVAL);
+}
+
+function getSecondsUntilNextFeaturedRotation() {
+  const currentSeconds = Math.floor(Date.now() / 1000);
+  return FEATURED_INTERVAL - (currentSeconds % FEATURED_INTERVAL);
+}
 
 const MARKET_LIMITS = {
   common: 8,
@@ -204,22 +222,31 @@ function getRandomSubset(arr, count) {
   return out;
 }
 
-async function createNewMarketPool(userId) {
+async function createNewMarketPool(userId, timeSlot = null) {
+  // Get data from global window objects (loaded from Supabase)
+  const commonPokemon = window.rarityData?.common || [];
+  const rarePokemon = window.rarityData?.rare || [];
+  const epicPokemon = window.rarityData?.epic || [];
+  const legendaryPokemon = window.legendaryList || [];
+
+  // Use provided time slot or calculate current one
+  const currentTimeSlot = timeSlot ?? getCurrentMarketTimeSlot();
+
   const pool = [
-    ...getRandomSubset(COMMON_POKEMON, MARKET_LIMITS.common).map((p) => ({
+    ...getRandomSubset(commonPokemon, MARKET_LIMITS.common).map((p) => ({
       pokemon_name: p.name,
       rarity: "Common",
     })),
-    ...getRandomSubset(RARE_POKEMON, MARKET_LIMITS.rare).map((p) => ({
+    ...getRandomSubset(rarePokemon, MARKET_LIMITS.rare).map((p) => ({
       pokemon_name: p.name,
       rarity: "Rare",
     })),
-    ...getRandomSubset(EPIC_POKEMON, MARKET_LIMITS.epic).map((p) => ({
+    ...getRandomSubset(epicPokemon, MARKET_LIMITS.epic).map((p) => ({
       pokemon_name: p.name,
       rarity: "Epic",
     })),
     ...getRandomSubset(
-      legendaryList.map((name) => ({ name })),
+      legendaryPokemon.map((name) => ({ name })),
       MARKET_LIMITS.legendary
     ).map((p) => ({
       pokemon_name: p.name,
@@ -238,10 +265,12 @@ async function createNewMarketPool(userId) {
     throw deleteError;
   }
 
+  // Include time_slot in each row for tracking
   const rows = pool.map((p) => ({
     user_id: userId,
     pokemon_name: p.pokemon_name,
     rarity: p.rarity,
+    time_slot: currentTimeSlot,
   }));
 
   const { error: insertError } = await supabase
@@ -253,10 +282,13 @@ async function createNewMarketPool(userId) {
     throw insertError;
   }
 
-  return pool.map((p) => ({
-    name: p.pokemon_name,
-    rarity: p.rarity,
-  }));
+  return {
+    pool: pool.map((p) => ({
+      name: p.pokemon_name,
+      rarity: p.rarity,
+    })),
+    timeSlot: currentTimeSlot,
+  };
 }
 
 async function getMarketPool(userId) {
@@ -272,15 +304,25 @@ async function getMarketPool(userId) {
 
   if (!data || data.length === 0) return null;
 
-  return data.map((row) => ({
-    name: row.pokemon_name,
-    rarity: row.rarity,
-  }));
+  // Get time slot from first row (all rows have same time slot)
+  const storedTimeSlot = data[0]?.time_slot || 0;
+
+  return {
+    pool: data.map((row) => ({
+      name: row.pokemon_name,
+      rarity: row.rarity,
+    })),
+    timeSlot: storedTimeSlot,
+  };
 }
 
 // ----- FEATURED Pricing -----
 function pickRandomFeaturedFromClient() {
-  const pool = [...MYTHICAL_POKEMON, ...DIVINE_POKEMON];
+  // Get data from global window objects (loaded from Supabase)
+  const mythicalPokemon = window.rarityData?.mythical || [];
+  const divinePokemon = window.rarityData?.divine || [];
+
+  const pool = [...mythicalPokemon, ...divinePokemon];
   const chosen = pool[Math.floor(Math.random() * pool.length)];
 
   let pokechipPrice = 0;
@@ -300,14 +342,14 @@ function pickRandomFeaturedFromClient() {
 
 
 async function getFeaturedPokemonFromDB(userId) {
-    const now = new Date();
+    const currentTimeSlot = getCurrentFeaturedTimeSlot();
 
-    // Get existing active featured Pokémon
+    // Get existing featured Pokémon for this user
     const { data: rows, error } = await supabase
         .from("featured_slots")
         .select("*")
         .eq("user_id", userId)
-        .order("start_at", { ascending: false })
+        .order("time_slot", { ascending: false })
         .limit(1);
 
     if (error) {
@@ -316,22 +358,21 @@ async function getFeaturedPokemonFromDB(userId) {
 
     const existing = rows && rows.length > 0 ? rows[0] : null;
 
-
-    if (existing && new Date(existing.end_at) > now) {
-        console.log(" Using EXISTING featured — price WILL NOT change");
+    // Check if existing featured is still in the current time slot
+    if (existing && existing.time_slot === currentTimeSlot) {
+        console.log("Using EXISTING featured — same time slot, price preserved");
         return {
             name: existing.pokemon_name,
             rarity: existing.rarity,
             price_pkchp: existing.price_pkchp,
-            startAt: existing.start_at,
-            endAt: existing.end_at,
+            timeSlot: existing.time_slot,
         };
     }
 
-
+    // Time slot changed - create new featured Pokemon
     const picked = pickRandomFeaturedFromClient();
 
-    // Mythical to Divine Pricing
+    // Mythical to Divine Pricing (random per user)
     let price_pkchp = 0;
 
     if (picked.rarity === "Mythical") {
@@ -339,9 +380,6 @@ async function getFeaturedPokemonFromDB(userId) {
     } else if (picked.rarity === "Divine") {
         price_pkchp = 1000 + Math.floor(Math.random() * 501);
     }
-
-    const startAt = now.toISOString();
-    const endAt = new Date(now.getTime() + FEATURED_INTERVAL * 1000).toISOString();
 
     const { data: inserted, error: insertError } = await supabase
         .from("featured_slots")
@@ -351,8 +389,7 @@ async function getFeaturedPokemonFromDB(userId) {
                 pokemon_name: picked.name,
                 rarity: picked.rarity,
                 price_pkchp: price_pkchp,
-                start_at: startAt,
-                end_at: endAt,
+                time_slot: currentTimeSlot,
             },
         ])
         .select();
@@ -368,18 +405,12 @@ async function getFeaturedPokemonFromDB(userId) {
         name: newRow.pokemon_name,
         rarity: newRow.rarity,
         price_pkchp: newRow.price_pkchp,
-        startAt: newRow.start_at,
-        endAt: newRow.end_at,
+        timeSlot: newRow.time_slot,
     };
 }
 
 
 
-
-function secondsUntil(isoEnd) {
-  const diffMs = new Date(isoEnd) - new Date();
-  return Math.max(0, Math.floor(diffMs / 1000));
-}
 
 // MAIN
 document.addEventListener("DOMContentLoaded", async () => {
@@ -397,8 +428,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const featuredPriceLabelEl = document.getElementById("featuredPriceLabel");
 
 
-  let refreshTimer = REFRESH_INTERVAL;
-  let featuredTimer = FEATURED_INTERVAL;
+  // Timers calculated from real-world time
+  let refreshTimer = getSecondsUntilNextMarketRotation();
+  let featuredTimer = getSecondsUntilNextFeaturedRotation();
+  let currentMarketTimeSlot = getCurrentMarketTimeSlot();
+  let currentFeaturedTimeSlot = getCurrentFeaturedTimeSlot();
 
   let currentMarketPool = [];
   let featuredPokemon = null;
@@ -411,18 +445,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-// DATA VALIDATION
-  if (
-    typeof COMMON_POKEMON === "undefined" ||
-    typeof RARE_POKEMON === "undefined" ||
-    typeof EPIC_POKEMON === "undefined" ||
-    typeof legendaryList === "undefined" ||
-    typeof MYTHICAL_POKEMON === "undefined" ||
-    typeof DIVINE_POKEMON === "undefined"
-  ) {
-    console.error("Missing rarityData.js or legendaryList.js");
+// LOAD POKEMON DATA FROM SUPABASE
+  const rarityData = await loadRarityData();
+  const legendaryListData = await loadLegendaryList();
+
+  if (!rarityData || legendaryListData.length === 0) {
+    console.error("Failed to load Pokemon data from Supabase");
     return;
   }
+
+  console.log("Pokemon data loaded successfully from Supabase");
 
 // POKECHIP LOGIC (wallet: on-chain PKCHP first, Supabase fallback)
   const updateNavbarPokechip = () => {
@@ -500,9 +532,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function initFeatured() {
     featuredPokemon = await getFeaturedPokemonFromDB(CURRENT_USER_ID);
     await renderFeatured();
-    featuredTimer = secondsUntil(
-      featuredPokemon.endAt || featuredPokemon.end_at
-    );
+    // Timer is calculated from real-world time, no need for endAt
+    featuredTimer = getSecondsUntilNextFeaturedRotation();
   }
 
   await initFeatured();
@@ -765,25 +796,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-// MARKET TIMER (per-user data is in DB)
-  let savedTimer = Number(localStorage.getItem(MARKET_TIMER_KEY));
-  if (Number.isFinite(savedTimer) && savedTimer > 0) {
-    refreshTimer = savedTimer;
-  }
-
+// MARKET TIMER - Real-world time based (no localStorage needed)
   setInterval(async () => {
-    refreshTimer--;
-    localStorage.setItem(MARKET_TIMER_KEY, refreshTimer);
+    // Recalculate from real-world time every tick
+    refreshTimer = getSecondsUntilNextMarketRotation();
+    const newTimeSlot = getCurrentMarketTimeSlot();
 
     const m = String(Math.floor(refreshTimer / 60)).padStart(2, "0");
     const s = String(refreshTimer % 60).padStart(2, "0");
     refreshTimerEl.textContent = `Next refresh in ${m}:${s}`;
 
-    if (refreshTimer <= 0) {
-      refreshTimer = REFRESH_INTERVAL;
-      localStorage.setItem(MARKET_TIMER_KEY, refreshTimer);
+    // Check if time slot changed (new rotation period)
+    if (newTimeSlot !== currentMarketTimeSlot) {
+      currentMarketTimeSlot = newTimeSlot;
 
-      currentMarketPool = await createNewMarketPool(CURRENT_USER_ID);
+      const result = await createNewMarketPool(CURRENT_USER_ID, newTimeSlot);
+      currentMarketPool = result.pool;
 
       const active =
         document.querySelector(".market-filter-btn.active")?.dataset.filter ||
@@ -793,30 +821,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }, 1000);
 
-// FEATURED TIMER 
+// FEATURED TIMER - Real-world time based
   setInterval(async () => {
-    featuredTimer--;
+    // Recalculate from real-world time every tick
+    featuredTimer = getSecondsUntilNextFeaturedRotation();
+    const newFeaturedTimeSlot = getCurrentFeaturedTimeSlot();
 
     const m = String(Math.floor(featuredTimer / 60)).padStart(2, "0");
     const s = String(featuredTimer % 60).padStart(2, "0");
 
     featuredTimerEl.textContent = `${m}:${s}`;
 
-    if (featuredTimer <= 0) {
+    // Check if time slot changed (new rotation period)
+    if (newFeaturedTimeSlot !== currentFeaturedTimeSlot) {
+      currentFeaturedTimeSlot = newFeaturedTimeSlot;
       featuredPokemon = await getFeaturedPokemonFromDB(CURRENT_USER_ID);
       await renderFeatured();
-      featuredTimer = secondsUntil(
-        featuredPokemon.endAt || featuredPokemon.end_at
-      );
     }
   }, 1000);
 
-// INITIAL MARKET LOAD
-  const savedPool = await getMarketPool(CURRENT_USER_ID);
-  if (!savedPool || savedPool.length === 0) {
-    currentMarketPool = await createNewMarketPool(CURRENT_USER_ID);
+// INITIAL MARKET LOAD - Check if time slot has changed
+  const savedData = await getMarketPool(CURRENT_USER_ID);
+
+  if (!savedData || savedData.pool.length === 0) {
+    // No saved pool, create new one
+    const result = await createNewMarketPool(CURRENT_USER_ID, currentMarketTimeSlot);
+    currentMarketPool = result.pool;
+  } else if (savedData.timeSlot !== currentMarketTimeSlot) {
+    // Time slot changed while offline - regenerate pool
+    console.log(`Market time slot changed: ${savedData.timeSlot} → ${currentMarketTimeSlot}`);
+    const result = await createNewMarketPool(CURRENT_USER_ID, currentMarketTimeSlot);
+    currentMarketPool = result.pool;
   } else {
-    currentMarketPool = savedPool;
+    // Same time slot, use saved pool
+    currentMarketPool = savedData.pool;
   }
 
   renderMarket("all");

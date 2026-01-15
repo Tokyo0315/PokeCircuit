@@ -1,65 +1,49 @@
-const legendaryList = [
-  // Gen 1
-  "articuno",
-  "zapdos",
-  "moltres",
+// Legendary Pokemon List - Fetched from Supabase
+// This replaces the hardcoded array with database queries
 
-  // Gen 2
-  "raikou",
-  "entei",
-  "suicune",
-  "lugia",
-  "ho-oh",
+let legendaryList = [];
+let legendaryDataLoaded = false;
 
-  // Gen 3
-  "regirock",
-  "regice",
-  "registeel",
-  "latias",
-  "latios",
-  "kyogre",
-  "groudon",
-  "rayquaza",
+// Fetch legendary Pokemon from Supabase
+async function loadLegendaryList() {
+  if (legendaryDataLoaded) {
+    return legendaryList;
+  }
 
-  // Gen 4
-  "uxie",
-  "mesprit",
-  "azelf",
-  "dialga",
-  "palkia",
-  "heatran",
-  "regigigas",
-  "cresselia",
+  if (!window.supabase) {
+    console.error("Supabase not initialized. Cannot load legendary list.");
+    return [];
+  }
 
-  // Gen 5
-  "cobalion",
-  "terrakion",
-  "virizion",
-  "tornadus-incarnate",
-  "thundurus-therian",
-  "landorus-incarnate",
-  "reshiram",
-  "zekrom",
+  try {
+    const { data, error } = await window.supabase
+      .from("pokemon_legendary")
+      .select("name, gen")
+      .order("gen");
 
-  // Gen 6
-  "xerneas",
-  "yveltal",
+    if (error) {
+      console.error("Error fetching legendary list:", error);
+      return [];
+    }
 
-  // Gen 7
-  "solgaleo",
-  "lunala",
+    // Extract just the names for backward compatibility
+    legendaryList = data.map((p) => p.name);
+    legendaryDataLoaded = true;
 
-  // Gen 8
-  "zacian",
-  "zamazenta",
-  "glastrier",
-  "spectrier",
+    // Update global reference
+    window.legendaryList = legendaryList;
 
-  // Gen 9
-  "chien-pao",
-  "ting-lu",
-  "wo-chien",
-  "chi-yu",
-];
+    console.log("Legendary list loaded from Supabase:", legendaryList.length, "Pokemon");
 
+    return legendaryList;
+  } catch (err) {
+    console.error("Failed to load legendary list:", err);
+    return [];
+  }
+}
+
+// Make function available globally
+window.loadLegendaryList = loadLegendaryList;
+
+// Initialize empty legendaryList (will be populated after loadLegendaryList is called)
 window.legendaryList = legendaryList;

@@ -423,6 +423,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const resultMessage = document.getElementById("resultMessage");
   const rewardAmount = document.getElementById("rewardAmount");
   const claimBtn = document.getElementById("claimRewardBtn");
+  const noticeModal = document.getElementById("battleNoticeModal");
+  const noticeTitle = document.getElementById("noticeTitle");
+  const noticeMessage = document.getElementById("noticeMessage");
+  const noticeOkBtn = document.getElementById("noticeOkBtn");
 
   // =========================================================
   // TYPE CHART
@@ -785,6 +789,22 @@ if (playerWon) {
     resultModal.classList.add("show");
   }
 
+  function showNoticeModal(title, message, onClose) {
+    if (!noticeModal) {
+      if (onClose) onClose();
+      return;
+    }
+
+    noticeTitle.textContent = title || "NOTICE";
+    noticeMessage.textContent = message || "";
+    noticeModal.classList.add("show");
+    noticeOkBtn.disabled = false;
+    noticeOkBtn.onclick = () => {
+      noticeModal.classList.remove("show");
+      if (onClose) onClose();
+    };
+  }
+
   // =========================================================
   // CLAIM BUTTON HANDLER
   // =========================================================
@@ -805,6 +825,9 @@ if (playerWon) {
     txStep2.querySelector(".tx-step-text").textContent = isVictory ? "Claiming PKCHP rewards..." : "Processing battle end...";
     txStep3.querySelector(".tx-step-text").textContent = isVictory ? "Finalizing rewards..." : "Returning to lobby...";
     setTxStep(1);
+
+    let noticeTitleText = "BATTLE COMPLETE";
+    let noticeMessageText = "Returning to home...";
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
@@ -845,20 +868,24 @@ if (playerWon) {
             .eq("user_id", window.CURRENT_USER_ID);
         }
 
-        alert("🎉 Rewards claimed successfully!");
+        noticeTitleText = "REWARDS CLAIMED";
+        noticeMessageText = "Rewards claimed successfully!";
       } else {
-        alert("Better luck next time!");
+        noticeTitleText = "BATTLE COMPLETE";
+        noticeMessageText = "Better luck next time!";
       }
     } catch (err) {
       console.error("Transaction failed:", err);
       hideTxModal();
-      alert("Transaction issue, but continuing... " + err.message);
+      noticeTitleText = "TRANSACTION ISSUE";
+      noticeMessageText = "Transaction issue, but continuing... " + err.message;
     }
 
-    await clearBattle();
-    window.location.href = "home.html";
+    showNoticeModal(noticeTitleText, noticeMessageText, async () => {
+      await clearBattle();
+      window.location.href = "home.html";
+    });
   });
-
   // =========================================================
   // LEVEL UP SYSTEM - FIXED WITH PROPER EXP CALCULATION
   // =========================================================
@@ -1125,3 +1152,4 @@ if (playerWon) {
   log("⚔️ Battle Start!", "#3b82f6");
   log(`${playerPokemon.name} vs ${aiPokemon.name}`, "#6b7280");
 });
+
