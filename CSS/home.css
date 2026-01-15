@@ -93,9 +93,10 @@
 .pc-nav-collapse {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     flex: 1;
     margin-left: 2rem;
+    gap: 1.5rem;
 }
 
 /* Nav Links - Horizontal row */
@@ -106,6 +107,62 @@
     margin: 0;
     padding: 0;
     list-style: none;
+}
+
+.pc-nav-group {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.pc-nav-trigger {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+}
+
+.pc-nav-trigger::after {
+    content: "▼";
+    font-size: 0.6rem;
+    margin-left: 0.35rem;
+    color: inherit;
+}
+
+.pc-nav-dropdown {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 0;
+    min-width: 170px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.6rem;
+    border-radius: 12px;
+    background: rgba(10, 12, 16, 0.98);
+    border: 1px solid rgba(255, 216, 110, 0.18);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 20;
+}
+
+.pc-nav-dropdown .pc-nav-link {
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+}
+
+.pc-nav-dropdown .pc-nav-link:hover {
+    background: rgba(74, 222, 128, 0.12);
+}
+
+.pc-nav-group:hover .pc-nav-dropdown,
+.pc-nav-group:focus-within .pc-nav-dropdown {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
 .pc-nav-link {
@@ -152,15 +209,52 @@
 .pc-nav-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.9rem;
     flex-shrink: 0;
+    margin-left: auto;
+}
+
+.pc-trainer-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1.5px solid rgba(59, 130, 246, 0.6);
+    font-size: 0.75rem;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.pc-trainer-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #93c5fd;
+    font-weight: 700;
+}
+
+.pc-trainer-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #fefce8;
+    font-weight: 700;
+    display: inline-block;
 }
 
 .pc-balance {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    text-align: right;
     line-height: 1.3;
+    padding: 0;
+    border: 0;
+    background: transparent;
 }
 
 .pc-eth-balance {
@@ -300,6 +394,26 @@
     .pc-nav-link {
         font-size: 1rem;
         padding: 0.75rem;
+    }
+
+    .pc-nav-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pc-nav-trigger::after {
+        content: "";
+        margin-left: 0;
+    }
+
+    .pc-nav-dropdown {
+        position: static;
+        min-width: 0;
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        box-shadow: none;
+        border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .pc-nav-right {
@@ -860,6 +974,33 @@ section,
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
+}
+
+.trainer-modal {
+    width: min(26rem, 90%);
+}
+
+.trainer-modal-body {
+    display: block;
+}
+
+.trainer-modal-error {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #fcd34d;
+}
+
+.trainer-modal .form-control {
+    background: rgba(15, 18, 25, 0.85);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 216, 110, 0.3);
+}
+
+.trainer-modal .form-control:focus {
+    background: rgba(15, 18, 25, 0.95);
+    color: #ffffff;
+    border-color: #ffd86b;
+    box-shadow: 0 0 0 0.2rem rgba(255, 216, 110, 0.2);
 }
 
 @media (max-width: 576px) {

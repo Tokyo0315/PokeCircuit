@@ -241,6 +241,32 @@ ${
   }
 
   // CANCEL LISTING
+  const messageModalBackdrop = document.getElementById(
+    "p2pMessageModalBackdrop"
+  );
+  const messageModalText = document.getElementById("p2pMessageModalText");
+  const messageModalClose = document.getElementById("p2pMessageModalClose");
+  const messageModalOk = document.getElementById("p2pMessageModalOk");
+
+  const closeMessageModal = () => {
+    messageModalBackdrop?.classList.add("d-none");
+  };
+
+  const openMessageModal = (message) => {
+    if (messageModalText) messageModalText.textContent = message;
+    messageModalBackdrop?.classList.remove("d-none");
+  };
+
+  if (messageModalClose) {
+    messageModalClose.addEventListener("click", closeMessageModal);
+  }
+  if (messageModalOk) messageModalOk.addEventListener("click", closeMessageModal);
+  if (messageModalBackdrop) {
+    messageModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === messageModalBackdrop) closeMessageModal();
+    });
+  }
+
   grid.addEventListener("click", async (e) => {
     const btn = e.target.closest(".cancel-p2p-btn");
     if (!btn) return;
@@ -291,7 +317,7 @@ ${
     if (window.logP2PDelist) {
       await window.logP2PDelist(listing);
     }
-    alert("Listing cancelled. Pokémon returned to your Collection!");
+    openMessageModal("Your Pokemon is back to your Collection.");
   });
 
   // BUY MODAL
@@ -480,6 +506,34 @@ ${
           "Cleaning up listing and logging the transaction."
         );
 
+        const buyerWallet =
+          window.CURRENT_WALLET_ADDRESS ||
+          localStorage.getItem("CURRENT_WALLET_ADDRESS") ||
+          null;
+
+        const { error: sellerTxError } = await supabase
+          .from("transactions")
+          .insert([
+            {
+              user_id: pendingListing.seller_id,
+              wallet_address: pendingListing.seller_wallet,
+              status: "success",
+              type: "p2p_sell",
+              pokemon_name: pendingListing.pokemon_name,
+              pokemon_rarity: pendingListing.rarity,
+              pokemon_sprite: pendingListing.sprite_url,
+              pokemon_level: pendingListing.level || 1,
+              amount: price,
+              currency: "PKCHP",
+              counterparty_wallet: buyerWallet,
+              created_at: new Date().toISOString(),
+            },
+          ]);
+
+        if (sellerTxError) {
+          console.warn("Seller transaction log failed:", sellerTxError);
+        }
+
         const { error: deleteError } = await supabase
           .from("p2p_listings")
           .delete()
@@ -501,7 +555,7 @@ ${
           );
         }
         hideProcessing();
-        alert("Purchase complete! Check your Collection page.");
+        window.location.href = "collection.html";
       } catch (err) {
         console.error("P2P purchase failed:", err);
         hideProcessing();

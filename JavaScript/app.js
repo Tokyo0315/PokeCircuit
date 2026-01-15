@@ -88,6 +88,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isWarning) walletStatus.classList.add("wallet-warning");
   }
 
+  function updateRegisterButtonLabel() {
+    if (!existingUser) return;
+    const typed = usernameInput.value.trim();
+    const current = existingUser.username || "";
+    registerBtn.textContent =
+      typed && typed !== current ? "UPDATE & ENTER ARENA" : "ENTER ARENA";
+  }
+
   // Wait for Supabase to be available (loaded from db.js)
   function waitForSupabase(timeout = 5000) {
     return new Promise((resolve, reject) => {
@@ -276,6 +284,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function updateExistingUsername(userId, username) {
+    if (!window.supabase) {
+      throw new Error("Database not available");
+    }
+
+    const { data, error } = await window.supabase
+      .from("users")
+      .update({ username: username })
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   // ============================================================
   // CONNECT WALLET
   // ============================================================
@@ -333,9 +357,10 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("trainerUsername", existingUser.username);
 
         usernameInput.value = existingUser.username;
-        usernameInput.disabled = true;
+        usernameInput.disabled = false;
         registerBtn.textContent = "ENTER ARENA";
         registerBtn.disabled = false;
+        updateRegisterButtonLabel();
 
         // Check if they need to claim bonus
         if (existingUser.claimed_welcome_bonus === false) {
@@ -378,8 +403,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const username = usernameInput.value.trim();
 
-    // Existing user - just login
+    // Existing user - allow username update then login
     if (existingUser) {
+      const currentUsername = existingUser.username || "";
+
+      if (!username) {
+        alert("Please enter a trainer username.");
+        return;
+      }
+
+      if (username !== currentUsername) {
+        if (username.length < 3) {
+          alert("Username must be at least 3 characters.");
+          return;
+        }
+
+        if (username.length > 16) {
+          alert("Username cannot exceed 16 characters.");
+          return;
+        }
+
+        registerBtn.disabled = true;
+        registerBtn.textContent = "UPDATING USERNAME...";
+
+        try {
+          const updatedUser = await updateExistingUsername(
+            existingUser.id,
+            username
+          );
+
+          existingUser = updatedUser;
+          localStorage.setItem("trainerUsername", updatedUser.username);
+          usernameInput.value = updatedUser.username;
+          updateRegisterButtonLabel();
+
+          welcomeMessage.textContent = `Username updated to ${updatedUser.username}.`;
+          welcomeMessage.style.display = "block";
+        } catch (err) {
+          console.error("Username update error:", err);
+
+          if (
+            err.message?.includes("duplicate") ||
+            err.message?.includes("unique")
+          ) {
+            alert("This username is already taken. Please choose another.");
+          } else {
+            alert("Username update failed: " + err.message);
+          }
+
+          registerBtn.disabled = false;
+          updateRegisterButtonLabel();
+          return;
+        }
+      }
+
       await handleLogin(existingUser);
       return;
     }
@@ -529,6 +606,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================================================
   // HANDLE ACCOUNT CHANGES
   // ============================================================
+
+  usernameInput.addEventListener("input", () => {
+    updateRegisterButtonLabel();
+  });
 
   if (window.ethereum) {
     window.ethereum.on("accountsChanged", (accounts) => {

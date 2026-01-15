@@ -37,11 +37,21 @@
                 <!-- Center: Nav links -->
                 <nav class="pc-nav-links">
                     <a href="home.html" class="pc-nav-link pc-nav-active">Home</a>
-                    <a href="market.html" class="pc-nav-link">Marketplace</a>
+                    <div class="pc-nav-group">
+                        <button class="pc-nav-link pc-nav-trigger" type="button">Shop</button>
+                        <div class="pc-nav-dropdown">
+                            <a href="market.html" class="pc-nav-link">Marketplace</a>
+                            <a href="p2p.html" class="pc-nav-link">P2P Market</a>
+                        </div>
+                    </div>
                     <a href="collection.html" class="pc-nav-link">Collection</a>
-                    <a href="match-setup.html" class="pc-nav-link">Tournament</a>
-                    <a href="pvp-lobby.html" class="pc-nav-link">PVP Battle</a>
-                    <a href="p2p.html" class="pc-nav-link">P2P</a>
+                    <div class="pc-nav-group">
+                        <button class="pc-nav-link pc-nav-trigger" type="button">Circuit</button>
+                        <div class="pc-nav-dropdown">
+                            <a href="match-setup.html" class="pc-nav-link">Tournament</a>
+                            <a href="pvp-lobby.html" class="pc-nav-link">PVP Battle</a>
+                        </div>
+                    </div>
                     <a href="transactions.html" class="pc-nav-link">Transactions</a>
                 </nav>
 
@@ -60,6 +70,10 @@
                         <span class="pc-pokechip-amount">0</span>
                     </div>
 
+                    <div class="pc-trainer-badge">
+                        <span class="pc-trainer-label">Trainer</span>
+                        <span class="pc-trainer-name" data-trainer-name>Trainer</span>
+                    </div>
                     <button class="pc-wallet-chip" type="button">
                         No Wallet
                     </button>

@@ -198,7 +198,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         data-attack="${entry.attack}"
         data-defense="${entry.defense}"
         data-speed="${entry.speed}"
-        data-level="${entry.level}">
+        data-level="${entry.level}"
+        data-exp="${entry.exp}">
         Sell
       </button>
     </div>
@@ -295,6 +296,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       defense: Number(btn.dataset.defense),
       speed: Number(btn.dataset.speed),
       level: Number(btn.dataset.level || 1),
+      exp: Number(btn.dataset.exp || 0),
     };
 
     sellModalSprite.src = selectedPokemonForSale.sprite;
@@ -347,6 +349,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           defense: selectedPokemonForSale.defense,
           speed: selectedPokemonForSale.speed,
           level: selectedPokemonForSale.level,
+          exp: selectedPokemonForSale.exp,
           price_pkchp: price,
           status: "listed",
           listed_at: new Date().toISOString(),
@@ -391,7 +394,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 });
-
 
 
 
