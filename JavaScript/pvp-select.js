@@ -35,6 +35,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const roomCodeDisplay = document.getElementById("roomCodeDisplay");
   const betAmountDisplay = document.getElementById("betAmountDisplay");
   const selectionTimer = document.getElementById("selectionTimer");
+  const battleModeDisplay = document.getElementById("battleModeDisplay");
+  const selectionTitleText = document.getElementById("selectionTitleText");
+  const selectionCount = document.getElementById("selectionCount");
+  const selectionWarning = document.querySelector(
+    ".selection-title .title-warning"
+  );
 
   const yourName = document.getElementById("yourName");
   const yourPokemonSlot = document.getElementById("yourPokemonSlot");
@@ -68,6 +74,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const confirmRarity = document.getElementById("confirmRarity");
   const confirmLevel = document.getElementById("confirmLevel");
   const confirmNameRepeat = document.getElementById("confirmNameRepeat");
+  const confirmTeamList = document.getElementById("confirmTeamList");
+  const confirmPokemonBlock = document.querySelector(".confirm-pokemon");
   const confirmCancel = document.getElementById("confirmCancel");
   const confirmAccept = document.getElementById("confirmAccept");
 
@@ -85,6 +93,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let room = null;
   let collection = [];
   let selectedPokemon = null;
+  let battleMode = "single";
+  let selectedIds = new Set();
   let isReady = false;
   let roomSubscription = null;
   let timerInterval = null;
@@ -110,6 +120,83 @@ document.addEventListener("DOMContentLoaded", async () => {
     return shortenWallet(wallet);
   }
 
+  function formatBattleMode(mode) {
+    return mode === "team" ? "Team (3v3)" : "Single";
+  }
+
+  function requiredTeamSize() {
+    return battleMode === "team" ? 3 : 1;
+  }
+
+  function getSelectedTeam() {
+    const ids = Array.from(selectedIds);
+    return ids
+      .map((id) => collection.find((p) => p.id === id))
+      .filter(Boolean);
+  }
+
+  function renderTeamSlots(container, team, isOpponent = false) {
+    if (battleMode !== "team") {
+      if (!team.length) {
+        container.innerHTML = `
+          <div class="empty-slot ${isOpponent ? "opponent" : ""}">
+            <span class="empty-icon">?</span>
+            <span class="empty-text">${
+              isOpponent ? "Waiting for selection..." : "Select Your Fighter"
+            }</span>
+          </div>
+        `;
+        return;
+      }
+
+      const mon = team[0];
+      container.innerHTML = `
+        <div class="selected-pokemon-display">
+          <img src="${mon.sprite}" alt="${mon.name}">
+          <span class="selected-pokemon-name">${mon.name}</span>
+          <span class="selected-pokemon-level">Level ${mon.level}</span>
+        </div>
+      `;
+      return;
+    }
+
+    const slots = [];
+    for (let i = 0; i < 3; i++) {
+      const mon = team[i];
+      if (mon) {
+        slots.push(`
+          <div class="team-slot">
+            <img src="${mon.sprite}" alt="${mon.name}">
+            <div class="slot-name">${mon.name}</div>
+          </div>
+        `);
+      } else {
+        slots.push(`
+          <div class="team-slot empty">
+            <div>Empty</div>
+          </div>
+        `);
+      }
+    }
+
+    container.innerHTML = `<div class="team-slots">${slots.join("")}</div>`;
+  }
+
+  function updateSelectionHeader() {
+    const needed = requiredTeamSize();
+    selectionCount.textContent = `${selectedIds.size}/${needed}`;
+    if (selectionTitleText) {
+      selectionTitleText.textContent =
+        battleMode === "team" ? "CHOOSE YOUR TEAM" : "CHOOSE YOUR FIGHTER";
+    }
+    if (selectionWarning) {
+      selectionWarning.textContent =
+        battleMode === "team"
+          ? "ƒsÿ‹,? These PokAcmon will be LOST if you lose!"
+          : "ƒsÿ‹,? This PokAcmon will be LOST if you lose!";
+    }
+  }
+
   // ============================================================
   // INITIALIZE
   // ============================================================
@@ -132,6 +219,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     roomCodeDisplay.textContent = room.room_code;
     betAmountDisplay.textContent = `${room.bet_amount} PKCHP`;
+    battleMode = room.battle_mode || localStorage.getItem("PVP_BATTLE_MODE") || "single";
+    localStorage.setItem("PVP_BATTLE_MODE", battleMode);
+    if (battleModeDisplay) {
+      battleModeDisplay.textContent = formatBattleMode(battleMode);
+    }
+    updateSelectionHeader();
 
     // FIXED: Use getDisplayName for proper truncation
     if (isHost) {
@@ -189,9 +282,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       exp: p.exp || 0,
     }));
 
-    if (collection.length === 0) {
+    const required = requiredTeamSize();
+    if (collection.length < required) {
       pokemonGrid.style.display = "none";
       emptyCollection.classList.add("show");
+
+      const emptyTitle = emptyCollection.querySelector("h3");
+      const emptyText = emptyCollection.querySelector("p");
+      if (emptyTitle) {
+        emptyTitle.textContent =
+          required === 1 ? "No PokAcmon Available" : "Not Enough PokAcmon";
+      }
+      if (emptyText) {
+        emptyText.textContent =
+          required === 1
+            ? "You need PokAcmon in your collection to battle!"
+            : `You need at least ${required} PokAcmon for a Team (3v3) battle.`;
+      }
+
+      readyBtn.disabled = true;
       return;
     }
 
@@ -207,7 +316,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     collection.forEach((pokemon) => {
       const card = document.createElement("div");
-      card.className = "pokemon-card";
+      const picked = selectedIds.has(pokemon.id);
+      card.className = `pokemon-card${picked ? " selected" : ""}`;
       card.dataset.id = pokemon.id;
 
       card.innerHTML = `
@@ -225,35 +335,54 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       `;
 
-      card.addEventListener("click", () => selectPokemon(pokemon, card));
+      card.addEventListener("click", () => selectPokemon(pokemon));
       pokemonGrid.appendChild(card);
     });
+  }
+
+  function updateSelectedUI() {
+    const team = getSelectedTeam();
+    renderTeamSlots(yourPokemonSlot, team, false);
+    updateSelectionHeader();
+
+    const needed = requiredTeamSize();
+    const readyText = readyBtn.querySelector(".ready-text");
+    const isReadyToLock = team.length === needed;
+    readyBtn.disabled = !isReadyToLock;
+    if (readyText) {
+      readyText.textContent = isReadyToLock
+        ? battleMode === "team"
+          ? "LOCK IN TEAM & READY"
+          : "LOCK IN & READY"
+        : `SELECT ${needed} POKA%MON`;
+    }
   }
 
   // ============================================================
   // SELECT POKEMON
   // ============================================================
 
-  function selectPokemon(pokemon, cardElement) {
+  function selectPokemon(pokemon) {
     if (isReady) return;
 
-    pokemonGrid
-      .querySelectorAll(".pokemon-card")
-      .forEach((c) => c.classList.remove("selected"));
+    if (battleMode === "single") {
+      selectedIds.clear();
+      selectedIds.add(pokemon.id);
+      selectedPokemon = pokemon;
+    } else {
+      if (selectedIds.has(pokemon.id)) {
+        selectedIds.delete(pokemon.id);
+      } else {
+        if (selectedIds.size >= 3) {
+          alert("Max 3 PokAcmon for team match.");
+          return;
+        }
+        selectedIds.add(pokemon.id);
+      }
+    }
 
-    cardElement.classList.add("selected");
-    selectedPokemon = pokemon;
-
-    yourPokemonSlot.innerHTML = `
-      <div class="selected-pokemon-display">
-        <img src="${pokemon.sprite}" alt="${pokemon.name}">
-        <span class="selected-pokemon-name">${pokemon.name}</span>
-        <span class="selected-pokemon-level">Level ${pokemon.level}</span>
-      </div>
-    `;
-
-    readyBtn.disabled = false;
-    readyBtn.querySelector(".ready-text").textContent = "LOCK IN & READY";
+    renderCollection();
+    updateSelectedUI();
   }
 
   // ============================================================
@@ -261,13 +390,32 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ============================================================
 
   readyBtn.addEventListener("click", () => {
-    if (!selectedPokemon) return;
+    const team = getSelectedTeam();
+    if (team.length !== requiredTeamSize()) return;
 
-    confirmSprite.src = selectedPokemon.sprite;
-    confirmName.textContent = selectedPokemon.name;
-    confirmRarity.textContent = selectedPokemon.rarity;
-    confirmLevel.textContent = `Level ${selectedPokemon.level}`;
-    confirmNameRepeat.textContent = selectedPokemon.name;
+    if (battleMode === "single") {
+      selectedPokemon = team[0];
+      confirmPokemonBlock.style.display = "flex";
+      confirmTeamList.innerHTML = "";
+      confirmSprite.src = selectedPokemon.sprite;
+      confirmName.textContent = selectedPokemon.name;
+      confirmRarity.textContent = selectedPokemon.rarity;
+      confirmLevel.textContent = `Level ${selectedPokemon.level}`;
+      confirmNameRepeat.textContent = selectedPokemon.name;
+    } else {
+      confirmPokemonBlock.style.display = "none";
+      confirmTeamList.innerHTML = team
+        .map(
+          (mon) => `
+          <div class="team-slot">
+            <img src="${mon.sprite}" alt="${mon.name}">
+            <div class="slot-name">${mon.name}</div>
+          </div>
+        `
+        )
+        .join("");
+      confirmNameRepeat.textContent = "these PokAcmon";
+    }
 
     showModal(confirmModal);
   });
@@ -285,22 +433,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       setTxStep(2);
 
-      const pokemonData = {
-        id: selectedPokemon.id,
-        name: selectedPokemon.name,
-        rarity: selectedPokemon.rarity,
-        sprite: selectedPokemon.sprite,
-        hp: selectedPokemon.hp,
-        attack: selectedPokemon.attack,
-        defense: selectedPokemon.defense,
-        speed: selectedPokemon.speed,
-        level: selectedPokemon.level,
-        exp: selectedPokemon.exp || 0,
-      };
+      const team = getSelectedTeam();
+      const teamPayload = team.map((mon) => ({
+        id: mon.id,
+        name: mon.name,
+        rarity: mon.rarity,
+        sprite: mon.sprite,
+        hp: mon.hp,
+        attack: mon.attack,
+        defense: mon.defense,
+        speed: mon.speed,
+        level: mon.level,
+        exp: mon.exp || 0,
+      }));
 
+      const payload = battleMode === "team" ? teamPayload : teamPayload[0];
       const updateData = isHost
-        ? { host_pokemon: pokemonData, host_ready: true }
-        : { guest_pokemon: pokemonData, guest_ready: true };
+        ? { host_pokemon: payload, host_ready: true }
+        : { guest_pokemon: payload, guest_ready: true };
 
       const { error } = await supabase
         .from("pvp_battle_rooms")
@@ -339,8 +489,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         : updatedRoom.host_ready;
 
       if (!opponentReady) {
-        waitingYourSprite.src = selectedPokemon.sprite;
-        waitingYourName.textContent = selectedPokemon.name;
+        const waitingMon = battleMode === "team" ? team[0] : selectedPokemon;
+        waitingYourSprite.src = waitingMon.sprite;
+        waitingYourName.textContent = waitingMon.name;
         showModal(waitingModal);
       }
     } catch (err) {
@@ -376,18 +527,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   function handleRoomUpdate(updatedRoom) {
     room = updatedRoom;
 
-    const opponentPokemon = isHost ? room.guest_pokemon : room.host_pokemon;
+    const opponentPayload = isHost ? room.guest_pokemon : room.host_pokemon;
     const opponentReady = isHost ? room.guest_ready : room.host_ready;
     const myReady = isHost ? room.host_ready : room.guest_ready;
+    const opponentTeam = Array.isArray(opponentPayload)
+      ? opponentPayload
+      : opponentPayload
+      ? [opponentPayload]
+      : [];
 
-    if (opponentReady && opponentPokemon) {
-      opponentPokemonSlot.innerHTML = `
-        <div class="selected-pokemon-display">
-          <img src="${opponentPokemon.sprite}" alt="${opponentPokemon.name}">
-          <span class="selected-pokemon-name">${opponentPokemon.name}</span>
-          <span class="selected-pokemon-level">Level ${opponentPokemon.level}</span>
-        </div>
-      `;
+    if (opponentReady) {
+      renderTeamSlots(opponentPokemonSlot, opponentTeam, true);
       opponentStatus.innerHTML = `
         <span class="status-dot ready"></span>
         <span>Ready!</span>
@@ -396,7 +546,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (myReady && opponentReady) {
       hideModal(waitingModal);
-      startBattleCountdown(opponentPokemon);
+      startBattleCountdown(opponentTeam);
     }
 
     if (room.status === "cancelled") {
@@ -410,15 +560,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   // BATTLE COUNTDOWN
   // ============================================================
 
-  function startBattleCountdown(opponentPokemon) {
+  function startBattleCountdown(opponentTeam) {
     if (timerInterval) {
       clearInterval(timerInterval);
     }
 
-    startYourSprite.src = selectedPokemon.sprite;
-    startYourName.textContent = selectedPokemon.name;
-    startOpponentSprite.src = opponentPokemon.sprite;
-    startOpponentName.textContent = opponentPokemon.name;
+    const myTeam = getSelectedTeam();
+    const myLead = battleMode === "team" ? myTeam[0] : selectedPokemon;
+    const opponentLead = opponentTeam[0];
+
+    startYourSprite.src = myLead.sprite;
+    startYourName.textContent = myLead.name;
+    startOpponentSprite.src = opponentLead.sprite;
+    startOpponentName.textContent = opponentLead.name;
 
     showModal(battleStartModal);
 
@@ -521,6 +675,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     localStorage.removeItem("PVP_ROOM_ID");
     localStorage.removeItem("PVP_ROOM_CODE");
     localStorage.removeItem("PVP_IS_HOST");
+    localStorage.removeItem("PVP_BATTLE_MODE");
   }
 
   window.addEventListener("beforeunload", () => {

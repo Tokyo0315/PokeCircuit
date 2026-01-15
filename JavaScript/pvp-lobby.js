@@ -112,6 +112,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const createBetOptions = document.getElementById("createBetOptions");
   const createRoomBtn = document.getElementById("createRoomBtn");
+  const battleModeOptions = document.getElementById("battleModeOptions");
 
   const roomCodeInput = document.getElementById("roomCodeInput");
   const joinRoomBtn = document.getElementById("joinRoomBtn");
@@ -119,6 +120,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const roomCreatedModal = document.getElementById("roomCreatedModal");
   const displayRoomCode = document.getElementById("displayRoomCode");
   const displayBetAmount = document.getElementById("displayBetAmount");
+  const displayBattleMode = document.getElementById("displayBattleMode");
   const copyCodeBtn = document.getElementById("copyCodeBtn");
   const cancelRoomBtn = document.getElementById("cancelRoomBtn");
 
@@ -129,6 +131,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const opponentName = document.getElementById("opponentName");
   const opponentWallet = document.getElementById("opponentWallet");
   const confirmBetAmount = document.getElementById("confirmBetAmount");
+  const confirmBattleMode = document.getElementById("confirmBattleMode");
   const declineJoinBtn = document.getElementById("declineJoinBtn");
   const acceptJoinBtn = document.getElementById("acceptJoinBtn");
 
@@ -141,6 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ============================================================
 
   let selectedBet = null;
+  let selectedMode = "single";
   let currentRoomId = null;
   let currentRoomCode = null;
   let roomSubscription = null;
@@ -179,6 +183,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     return wallet.slice(0, 6) + "..." + wallet.slice(-4);
   }
 
+  function formatBattleMode(mode) {
+    return mode === "team" ? "Team (3v3)" : "Single";
+  }
+
+  function getRequiredTeamSize(mode) {
+    return mode === "team" ? 3 : 1;
+  }
+
+  async function getCollectionCount() {
+    const { data, error } = await supabase
+      .from("user_pokemon")
+      .select("id")
+      .eq("user_id", CURRENT_USER_ID);
+
+    if (error) {
+      console.error("Collection check failed:", error);
+      return 0;
+    }
+
+    return data?.length || 0;
+  }
+
+  async function ensureCollectionForMode(mode) {
+    const count = await getCollectionCount();
+    const required = getRequiredTeamSize(mode);
+
+    if (count < required) {
+      const message =
+        required === 1
+          ? "You need at least 1 Pokemon in your collection to enter PVP."
+          : `You need at least ${required} Pokemon for a Team (3v3) PVP match.`;
+      showError(message);
+      return false;
+    }
+
+    return true;
+  }
+
   function getDisplayName(username, wallet) {
     if (username && username !== "Trainer" && username.length > 0) {
       if (username.length > 15) {
@@ -195,6 +237,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function loadBalance() {
     try {
+      const hasCollection = await ensureCollectionForMode(selectedMode);
+      if (!hasCollection) {
+        createRoomBtn.disabled = false;
+        createRoomBtn.innerHTML =
+          '<span class="btn-icon">ƒs­</span> CREATE BATTLE ROOM';
+        return;
+      }
       const wallet = CURRENT_WALLET;
       if (!wallet || !window.ethereum) {
         pkchpBalance = 0;
@@ -220,6 +269,48 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ============================================================
   // APPROVE PKCHP FOR ESCROW CONTRACT
   // ============================================================
+  async function loadBalance() {
+    try {
+      const wallet = CURRENT_WALLET;
+      if (!wallet || !window.ethereum) {
+        pkchpBalance = await getWalletBalanceFromDb();
+      } else {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const contract = new ethers.Contract(PKCHP_ADDRESS, PKCHP_ABI, provider);
+
+        const raw = await contract.balanceOf(wallet);
+        const dec = await contract.decimals();
+        pkchpBalance = Math.floor(Number(ethers.formatUnits(raw, dec)));
+      }
+    } catch (err) {
+      console.error("Balance load error:", err);
+      pkchpBalance = await getWalletBalanceFromDb();
+    }
+
+    document.querySelectorAll(".pc-pokechip-amount").forEach((el) => {
+      el.textContent = pkchpBalance.toLocaleString();
+    });
+  }
+
+  async function getWalletBalanceFromDb() {
+    try {
+      const { data, error } = await supabase
+        .from("user_wallet")
+        .select("pokechip_balance")
+        .eq("user_id", CURRENT_USER_ID)
+        .single();
+
+      if (error) {
+        console.warn("Wallet balance load failed:", error);
+        return 0;
+      }
+
+      return data?.pokechip_balance ?? 0;
+    } catch (err) {
+      console.error("Wallet balance load exception:", err);
+      return 0;
+    }
+  }
 
   async function approveEscrow(amount) {
     if (!window.ethereum || !PVP_ESCROW_ADDRESS) return true;
@@ -352,18 +443,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     btn.classList.add("selected");
     selectedBet = parseInt(btn.dataset.bet);
-
-    if (pkchpBalance < selectedBet) {
-      showError(
-        `Insufficient PKCHP! You need ${selectedBet} PKCHP but only have ${pkchpBalance}.`
-      );
-      btn.classList.remove("selected");
-      selectedBet = null;
-      createRoomBtn.disabled = true;
-      return;
-    }
-
     createRoomBtn.disabled = false;
+  });
+
+  // ============================================================
+  // BATTLE MODE SELECTION
+  // ============================================================
+
+  battleModeOptions.addEventListener("click", (e) => {
+    const btn = e.target.closest(".mode-btn");
+    if (!btn) return;
+
+    battleModeOptions
+      .querySelectorAll(".mode-btn")
+      .forEach((b) => b.classList.remove("selected"));
+
+    btn.classList.add("selected");
+    selectedMode = btn.dataset.battleMode || "single";
   });
 
   // ============================================================
@@ -389,6 +485,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     createRoomBtn.innerHTML = '<span class="btn-icon">⏳</span> APPROVING...';
 
     try {
+      const hasCollection = await ensureCollectionForMode(selectedMode);
+      if (!hasCollection) {
+        createRoomBtn.disabled = false;
+        createRoomBtn.innerHTML =
+          '<span class="btn-icon">ƒs­</span> CREATE BATTLE ROOM';
+        return;
+      }
+
+      if (pkchpBalance < selectedBet) {
+        showError(
+          `Insufficient PKCHP! You need ${selectedBet} PKCHP but only have ${pkchpBalance}.`
+        );
+        createRoomBtn.disabled = false;
+        createRoomBtn.innerHTML =
+          '<span class="btn-icon">ƒs­</span> CREATE BATTLE ROOM';
+        return;
+      }
+
       // Step 1: Approve PKCHP for escrow
       if (PVP_ESCROW_ADDRESS) {
         const approved = await approveEscrow(selectedBet);
@@ -434,27 +548,50 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const displayName = getDisplayName(userData?.username, CURRENT_WALLET);
 
-      const { data: room, error } = await supabase
+      const insertPayload = {
+        room_code: roomCode,
+        host_id: CURRENT_USER_ID,
+        host_wallet: CURRENT_WALLET,
+        host_username: displayName,
+        bet_amount: selectedBet,
+        exp_reward: Math.floor(selectedBet / 2) + 25,
+        battle_mode: selectedMode,
+        status: "waiting",
+      };
+
+      let room = null;
+      const { data: roomData, error } = await supabase
         .from("pvp_battle_rooms")
-        .insert({
-          room_code: roomCode,
-          host_id: CURRENT_USER_ID,
-          host_wallet: CURRENT_WALLET,
-          host_username: displayName,
-          bet_amount: selectedBet,
-          exp_reward: Math.floor(selectedBet / 2) + 25,
-          status: "waiting",
-        })
+        .insert(insertPayload)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        const message = (error.message || "").toLowerCase();
+        const missingModeColumn =
+          message.includes("battle_mode") && message.includes("schema cache");
+        if (missingModeColumn) {
+          delete insertPayload.battle_mode;
+          const { data: fallbackRoom, error: fallbackError } = await supabase
+            .from("pvp_battle_rooms")
+            .insert(insertPayload)
+            .select()
+            .single();
+          if (fallbackError) throw fallbackError;
+          room = fallbackRoom;
+        } else {
+          throw error;
+        }
+      } else {
+        room = roomData;
+      }
 
       currentRoomId = room.id;
       currentRoomCode = roomCode;
 
       displayRoomCode.textContent = roomCode;
       displayBetAmount.textContent = `${selectedBet} PKCHP`;
+      displayBattleMode.textContent = formatBattleMode(selectedMode);
       showModal(roomCreatedModal);
 
       // Log the deposit transaction
@@ -473,7 +610,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       await loadBalance();
     } catch (err) {
       console.error("Create room error:", err);
-      showError("Failed to create room: " + err.message);
+      const message = (err && err.message) || "";
+      const isUserRejected =
+        err?.code === 4001 ||
+        err?.code === "ACTION_REJECTED" ||
+        message.toLowerCase().includes("user rejected") ||
+        message.toLowerCase().includes("rejected");
+      showError(
+        isUserRejected
+          ? "You cancelled the room creation. You may create again."
+          : "Failed to create room: " + message
+      );
     }
 
     createRoomBtn.disabled = false;
@@ -516,6 +663,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       localStorage.setItem("PVP_ROOM_ID", room.id);
       localStorage.setItem("PVP_ROOM_CODE", room.room_code);
       localStorage.setItem("PVP_IS_HOST", "true");
+      localStorage.setItem(
+        "PVP_BATTLE_MODE",
+        room.battle_mode || selectedMode || "single"
+      );
 
       window.location.href = "pvp-select.html";
     }
@@ -632,6 +783,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
+      const roomMode = room.battle_mode || "single";
+      const hasCollection = await ensureCollectionForMode(roomMode);
+      if (!hasCollection) {
+        hideModal(joiningModal);
+        joinRoomBtn.disabled = false;
+        return;
+      }
+
       if (pkchpBalance < room.bet_amount) {
         hideModal(joiningModal);
         showError(
@@ -650,6 +809,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
       opponentWallet.textContent = shortenWallet(room.host_wallet);
       confirmBetAmount.textContent = `${room.bet_amount} PKCHP`;
+      confirmBattleMode.textContent = formatBattleMode(roomMode);
 
       showModal(confirmJoinModal);
     } catch (err) {
@@ -683,6 +843,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     acceptJoinBtn.textContent = "APPROVING...";
 
     try {
+      const roomMode = pendingRoom.battle_mode || "single";
+      const hasCollection = await ensureCollectionForMode(roomMode);
+      if (!hasCollection) {
+        acceptJoinBtn.disabled = false;
+        acceptJoinBtn.textContent = 'ƒs"‹,? ACCEPT & DEPOSIT';
+        return;
+      }
+
       // Step 1: Approve PKCHP for escrow
       if (PVP_ESCROW_ADDRESS) {
         const approved = await approveEscrow(pendingRoom.bet_amount);
@@ -735,6 +903,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       localStorage.setItem("PVP_ROOM_ID", pendingRoom.id);
       localStorage.setItem("PVP_ROOM_CODE", pendingRoom.room_code);
       localStorage.setItem("PVP_IS_HOST", "false");
+      localStorage.setItem("PVP_BATTLE_MODE", roomMode);
 
       hideModal(confirmJoinModal);
       window.location.href = "pvp-select.html";

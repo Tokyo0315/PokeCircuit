@@ -118,6 +118,13 @@
                             <button class="bet-btn" data-bet="100">100 <span>PKCHP</span></button>
                         </div>
                     </div>
+                    <div class="mode-selector">
+                        <label>Battle Mode:</label>
+                        <div class="mode-options" id="battleModeOptions">
+                            <button class="mode-btn selected" data-battle-mode="single">Single</button>
+                            <button class="mode-btn" data-battle-mode="team">Team (3v3)</button>
+                        </div>
+                    </div>
 
                     <button class="pvp-main-btn create-btn" id="createRoomBtn" disabled>
                         <span class="btn-icon">⚡</span>
@@ -204,6 +211,10 @@
                     <span>Bet Amount:</span>
                     <strong id="displayBetAmount">0 PKCHP</strong>
                 </div>
+                <div class="bet-display">
+                    <span>Mode:</span>
+                    <strong id="displayBattleMode">Single</strong>
+                </div>
                 <div class="waiting-status">
                     <div class="waiting-spinner"></div>
                     <span>Waiting for opponent to join...</span>
@@ -247,6 +258,10 @@
                     <div class="term-row">
                         <span>Bet Amount:</span>
                         <strong id="confirmBetAmount">0 PKCHP</strong>
+                    </div>
+                    <div class="term-row">
+                        <span>Battle Mode:</span>
+                        <strong id="confirmBattleMode">Single</strong>
                     </div>
                     <div class="term-row warning">
                         <span>⚠️ If you lose:</span>

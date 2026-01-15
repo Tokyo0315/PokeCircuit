@@ -90,6 +90,10 @@
                 <span class="bet-label">BET:</span>
                 <span class="bet-amount" id="betAmountDisplay">0 PKCHP</span>
             </div>
+            <div class="mode-info">
+                <span class="mode-label">MODE:</span>
+                <span class="mode-value" id="battleModeDisplay">Single</span>
+            </div>
             <div class="timer-info">
                 <span class="timer-label">TIME LEFT:</span>
                 <span class="timer-value" id="selectionTimer">60</span>
@@ -145,7 +149,8 @@
         <section class="pokemon-selection">
             <h2 class="selection-title">
                 <span class="title-icon">🎯</span>
-                CHOOSE YOUR FIGHTER
+                <span id="selectionTitleText">CHOOSE YOUR FIGHTER</span>
+                <span class="title-count" id="selectionCount">0/1</span>
                 <span class="title-warning">⚠️ This Pokémon will be LOST if you lose!</span>
             </h2>
 
@@ -219,6 +224,7 @@
                         <span class="confirm-level" id="confirmLevel">Level 1</span>
                     </div>
                 </div>
+                <div class="confirm-team" id="confirmTeamList"></div>
                 <div class="warning-box">
                     <span class="warning-icon">💀</span>
                     <p>If you LOSE this battle, <strong id="confirmNameRepeat">this Pokémon</strong> will be

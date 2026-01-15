@@ -1,11 +1,11 @@
-﻿// ============================================================
+// ============================================================
 // POKECIRCUIT ARENA - PVP BATTLE SYSTEM
 // Fixed: PKCHP transfer on win/loss + proper sprite saving
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!window.supabase) {
-    console.error("❌ Supabase not loaded");
+    console.error("? Supabase not loaded");
     return;
   }
 
@@ -76,6 +76,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const txModal = document.getElementById("txModal");
   const txTitle = document.getElementById("txTitle");
   const txMessage = document.getElementById("txMessage");
+  const rewardNoticeModal = document.getElementById("rewardNoticeModal");
+  const rewardNoticeTitle = document.getElementById("rewardNoticeTitle");
+  const rewardNoticeMessage = document.getElementById("rewardNoticeMessage");
+  const rewardNoticeOk = document.getElementById("rewardNoticeOk");
 
   // ============================================================
   // STATE
@@ -84,6 +88,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   let room = null;
   let myPokemon = null;
   let opponentPokemon = null;
+  let myTeam = [];
+  let opponentTeam = [];
+  let initialMyTeam = [];
+  let initialOpponentTeam = [];
   let myHP = 0;
   let opponentHP = 0;
   let myMaxHP = 0;
@@ -94,6 +102,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   let roomSubscription = null;
   let turnTimeLeft = 30;
   let turnTimerInterval = null;
+  let battleMode = "single";
+  let lastMyPokemonId = null;
+  let lastOpponentPokemonId = null;
 
   // ============================================================
   // HELPER: Shorten wallet address
@@ -110,6 +121,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       return username;
     }
     return shortenWallet(wallet);
+  }
+
+  function normalizeTeam(payload) {
+    const team = Array.isArray(payload) ? payload : payload ? [payload] : [];
+    return team.map((mon) => ({
+      ...mon,
+      current_hp: mon.current_hp ?? mon.hp,
+    }));
+  }
+
+  function getActiveMon(team) {
+    return team.length ? team[0] : null;
   }
 
   // ============================================================
@@ -140,6 +163,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     return { level, currentExp: remaining, expToNext: expNeeded };
+  }
+
+  async function awardExpToTeam(team, expReward) {
+    for (const mon of team) {
+      const currentLevel = mon.level || 1;
+      const currentExp = mon.exp || 0;
+      const cumulativeExp = getTotalExpToLevel(currentLevel) + currentExp;
+      const newTotalExp = cumulativeExp + expReward;
+      const levelData = calculateLevelFromExp(newTotalExp);
+      const newLevel = Math.max(currentLevel, levelData.level);
+      const expAtLevelStart = getTotalExpToLevel(newLevel);
+      const storedExpForLevel = Math.max(0, newTotalExp - expAtLevelStart);
+      const levelsGained = Math.max(0, newLevel - currentLevel);
+      const statIncrease = levelsGained * 10;
+
+      const updatePayload = {
+        exp: storedExpForLevel,
+        level: newLevel,
+      };
+
+      if (levelsGained > 0) {
+        updatePayload.hp = (mon.hp || 100) + statIncrease;
+        updatePayload.attack = (mon.attack || 50) + statIncrease;
+        updatePayload.defense = (mon.defense || 50) + statIncrease;
+        updatePayload.speed = (mon.speed || 50) + statIncrease;
+      }
+
+      await supabase.from("user_pokemon").update(updatePayload).eq("id", mon.id);
+    }
+  }
+
+  async function deleteTeam(team) {
+    for (const mon of team) {
+      await supabase.from("user_pokemon").delete().eq("id", mon.id);
+    }
   }
 
   // ============================================================
@@ -177,7 +235,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const tx = await pkchpContract.transfer(toAddress, amountWei);
       await tx.wait();
 
-      console.log(`✓ Transferred ${amount} PKCHP to ${toAddress}`);
+      console.log(`? Transferred ${amount} PKCHP to ${toAddress}`);
       return true;
     } catch (err) {
       console.error("PKCHP transfer failed:", err);
@@ -215,7 +273,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const tx = await rewardsContract.claimReward(amountWei);
       await tx.wait();
 
-      console.log(`✓ Claimed ${amount} PKCHP from rewards contract`);
+      console.log(`? Claimed ${amount} PKCHP from rewards contract`);
       return true;
     } catch (err) {
       console.error("Claim from rewards contract failed:", err);
@@ -244,31 +302,59 @@ document.addEventListener("DOMContentLoaded", async () => {
     room = roomData;
     pvpRoomCode.textContent = room.room_code;
 
+    battleMode =
+      room.battle_mode ||
+      localStorage.getItem("PVP_BATTLE_MODE") ||
+      (Array.isArray(room.host_pokemon) ? "team" : "single");
+    localStorage.setItem("PVP_BATTLE_MODE", battleMode);
+
+    const hostTeam = normalizeTeam(room.host_pokemon);
+    const guestTeam = normalizeTeam(room.guest_pokemon);
+
+    initialMyTeam = isHost ? hostTeam : guestTeam;
+    initialOpponentTeam = isHost ? guestTeam : hostTeam;
+
     if (isHost) {
-      myPokemon = room.host_pokemon;
-      opponentPokemon = room.guest_pokemon;
+      myTeam = hostTeam;
+      opponentTeam = guestTeam;
     } else {
-      myPokemon = room.guest_pokemon;
-      opponentPokemon = room.host_pokemon;
+      myTeam = guestTeam;
+      opponentTeam = hostTeam;
     }
 
-    myHP = myPokemon.hp;
+    myPokemon = getActiveMon(myTeam);
+    opponentPokemon = getActiveMon(opponentTeam);
+
+    if (!myPokemon || !opponentPokemon) {
+      alert("Battle data error!");
+      clearRoomData();
+      window.location.href = "pvp-lobby.html";
+      return;
+    }
+
+    myHP = myPokemon.current_hp ?? myPokemon.hp;
     myMaxHP = myPokemon.hp;
-    opponentHP = opponentPokemon.hp;
+    opponentHP = opponentPokemon.current_hp ?? opponentPokemon.hp;
     opponentMaxHP = opponentPokemon.hp;
+    lastMyPokemonId = myPokemon.id;
+    lastOpponentPokemonId = opponentPokemon.id;
 
     if (isHost) {
-      await supabase
-        .from("pvp_battle_rooms")
-        .update({
-          host_current_hp: room.host_pokemon.hp,
-          guest_current_hp: room.guest_pokemon.hp,
-          current_turn: room.host_id,
-          status: "battling",
-          started_at: new Date().toISOString(),
-          turn_started_at: new Date().toISOString(),
-        })
-        .eq("id", roomId);
+      const updatePayload = {
+        host_current_hp: myHP,
+        guest_current_hp: opponentHP,
+        current_turn: room.host_id,
+        status: "battling",
+        started_at: new Date().toISOString(),
+        turn_started_at: new Date().toISOString(),
+      };
+
+      if (battleMode === "team") {
+        updatePayload.host_pokemon = hostTeam;
+        updatePayload.guest_pokemon = guestTeam;
+      }
+
+      await supabase.from("pvp_battle_rooms").update(updatePayload).eq("id", roomId);
     }
 
     renderBattleUI();
@@ -278,10 +364,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     isMyTurn = isHost;
     updateTurnUI();
 
-    log("⚔️ PVP Battle started!", "#ffd86b");
+    log("?? PVP Battle started!", "#ffd86b");
     log(`${myPokemon.name} vs ${opponentPokemon.name}`, "#fff");
 
-    console.log("✓ PVP Battle initialized");
+    console.log("? PVP Battle initialized");
   }
 
   // ============================================================
@@ -400,6 +486,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     const newOpponentHP = Math.max(0, opponentHP - damage);
     opponentHP = newOpponentHP;
 
+    let updatedOpponentTeam = opponentTeam;
+    let opponentFainted = false;
+    let nextOpponent = opponentPokemon;
+    const faintedName = opponentPokemon.name;
+
+    if (battleMode === "team") {
+      updatedOpponentTeam = [...opponentTeam];
+      if (updatedOpponentTeam.length) {
+        updatedOpponentTeam[0] = {
+          ...updatedOpponentTeam[0],
+          current_hp: newOpponentHP,
+        };
+      }
+      if (newOpponentHP <= 0) {
+        opponentFainted = true;
+        updatedOpponentTeam = updatedOpponentTeam.slice(1);
+        nextOpponent = getActiveMon(updatedOpponentTeam);
+      }
+    }
+
     const updateData = {
       last_move: {
         by: CURRENT_USER_ID,
@@ -412,18 +518,51 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     if (isHost) {
-      updateData.guest_current_hp = newOpponentHP;
+      updateData.guest_current_hp =
+        battleMode === "team"
+          ? nextOpponent
+            ? nextOpponent.current_hp ?? nextOpponent.hp
+            : 0
+          : newOpponentHP;
       updateData.current_turn = room.guest_id;
+      if (battleMode === "team") {
+        updateData.guest_pokemon = updatedOpponentTeam;
+      }
     } else {
-      updateData.host_current_hp = newOpponentHP;
+      updateData.host_current_hp =
+        battleMode === "team"
+          ? nextOpponent
+            ? nextOpponent.current_hp ?? nextOpponent.hp
+            : 0
+          : newOpponentHP;
       updateData.current_turn = room.host_id;
+      if (battleMode === "team") {
+        updateData.host_pokemon = updatedOpponentTeam;
+      }
     }
 
     await supabase.from("pvp_battle_rooms").update(updateData).eq("id", roomId);
 
-    renderCard(opponentCardInfo, opponentPokemon, opponentHP, opponentMaxHP);
+    if (battleMode === "team") {
+      opponentTeam = updatedOpponentTeam;
+      opponentPokemon = nextOpponent;
+      if (opponentFainted) {
+        log(`${faintedName} fainted!`, "#22c55e");
+        if (nextOpponent) {
+          opponentHP = nextOpponent.current_hp ?? nextOpponent.hp;
+          opponentMaxHP = nextOpponent.hp;
+          opponentPokemonSprite.src = nextOpponent.sprite;
+          opponentCardName.textContent = nextOpponent.name;
+          log(`Opponent sent out ${nextOpponent.name}!`, "#3b82f6");
+        }
+      }
+    }
 
-    if (newOpponentHP <= 0) {
+    if (opponentPokemon) {
+      renderCard(opponentCardInfo, opponentPokemon, opponentHP, opponentMaxHP);
+    }
+
+    if (battleMode === "team" ? opponentTeam.length === 0 : newOpponentHP <= 0) {
       handleVictory();
     } else {
       isMyTurn = false;
@@ -453,15 +592,63 @@ document.addEventListener("DOMContentLoaded", async () => {
       .subscribe();
   }
 
-  function handleRoomUpdate(updatedRoom) {
+  async function handleRoomUpdate(updatedRoom) {
     room = updatedRoom;
 
-    if (isHost) {
-      myHP = updatedRoom.host_current_hp;
-      opponentHP = updatedRoom.guest_current_hp;
+    if (battleMode === "team") {
+      const hostTeam = normalizeTeam(updatedRoom.host_pokemon);
+      const guestTeam = normalizeTeam(updatedRoom.guest_pokemon);
+
+      if (isHost) {
+        myTeam = hostTeam;
+        opponentTeam = guestTeam;
+      } else {
+        myTeam = guestTeam;
+        opponentTeam = hostTeam;
+      }
+
+      const nextMy = getActiveMon(myTeam);
+      const nextOpp = getActiveMon(opponentTeam);
+
+      if (!nextMy && battleActive) {
+        handleDefeat();
+        return;
+      }
+
+      if (!nextOpp && battleActive) {
+        handleVictory();
+        return;
+      }
+
+      if (nextMy && nextMy.id !== lastMyPokemonId) {
+        myPokemon = nextMy;
+        lastMyPokemonId = nextMy.id;
+        myMaxHP = nextMy.hp;
+        playerPokemonSprite.src = nextMy.sprite;
+        playerCardName.textContent = nextMy.name;
+        await loadMoves();
+        log(`Go, ${nextMy.name}!`, "#3b82f6");
+      }
+
+      if (nextOpp && nextOpp.id !== lastOpponentPokemonId) {
+        opponentPokemon = nextOpp;
+        lastOpponentPokemonId = nextOpp.id;
+        opponentMaxHP = nextOpp.hp;
+        opponentPokemonSprite.src = nextOpp.sprite;
+        opponentCardName.textContent = nextOpp.name;
+        log(`Opponent sent out ${nextOpp.name}!`, "#ef4444");
+      }
+
+      myHP = nextMy.current_hp ?? nextMy.hp;
+      opponentHP = nextOpp.current_hp ?? nextOpp.hp;
     } else {
-      myHP = updatedRoom.guest_current_hp;
-      opponentHP = updatedRoom.host_current_hp;
+      if (isHost) {
+        myHP = updatedRoom.host_current_hp;
+        opponentHP = updatedRoom.guest_current_hp;
+      } else {
+        myHP = updatedRoom.guest_current_hp;
+        opponentHP = updatedRoom.host_current_hp;
+      }
     }
 
     renderCard(playerCardInfo, myPokemon, myHP, myMaxHP);
@@ -472,6 +659,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (myHP <= 0 && battleActive) {
+      if (battleMode === "team") {
+        return;
+      }
       handleDefeat();
       return;
     }
@@ -572,8 +762,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     battleActive = false;
     stopTurnTimer();
 
-    log("🏆 " + opponentPokemon.name + " fainted!", "#22c55e");
-    log("🏆 YOU WIN!", "#ffd86b");
+    log("?? " + opponentPokemon.name + " fainted!", "#22c55e");
+    log("?? YOU WIN!", "#ffd86b");
 
     await supabase
       .from("pvp_battle_rooms")
@@ -587,7 +777,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     wonAmount.textContent = room.bet_amount * 2;
     wonExp.textContent = room.exp_reward || 50;
-    opponentLostPokemon.textContent = opponentPokemon.name;
+    opponentLostPokemon.textContent =
+      battleMode === "team" ? "Opponent Team" : opponentPokemon.name;
 
     victoryModal.classList.add("show");
   }
@@ -596,12 +787,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     battleActive = false;
     stopTurnTimer();
 
-    log("💀 " + myPokemon.name + " fainted!", "#ef4444");
-    log("💀 YOU LOSE...", "#ef4444");
+    log("?? " + myPokemon.name + " fainted!", "#ef4444");
+    log("?? YOU LOSE...", "#ef4444");
 
     lostAmount.textContent = room.bet_amount;
     lostPokemonSprite.src = myPokemon.sprite;
-    lostPokemonName.textContent = myPokemon.name;
+    lostPokemonName.textContent =
+      battleMode === "team" ? "Your Team" : myPokemon.name;
 
     defeatModal.classList.add("show");
   }
@@ -610,8 +802,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     battleActive = false;
     stopTurnTimer();
 
-    log("🏃 Opponent disconnected!", "#f59e0b");
-    log("🏆 You win by forfeit!", "#22c55e");
+    log("?? Opponent disconnected!", "#f59e0b");
+    log("?? You win by forfeit!", "#22c55e");
 
     forfeitAmount.textContent = room.bet_amount * 2;
     opponentLeftModal.classList.add("show");
@@ -632,41 +824,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       const loserWallet = isHost ? room.guest_wallet : room.host_wallet;
       const expReward = room.exp_reward || 50;
       const rewardAmount = room.bet_amount * 2;
-      const currentLevel = myPokemon.level || 1;
-      const currentExp = myPokemon.exp || 0;
+      const loserTeam =
+        battleMode === "team" ? initialOpponentTeam : normalizeTeam(loserPokemon);
+      const winnerTeam = battleMode === "team" ? initialMyTeam : [myPokemon];
 
       // Step 1: Delete loser's Pokemon
-      txMessage.textContent = "Deleting opponent's Pokemon...";
-      await supabase.from("user_pokemon").delete().eq("id", loserPokemon.id);
+      txMessage.textContent =
+        battleMode === "team"
+          ? "Deleting opponent's team..."
+          : "Deleting opponent's Pokemon...";
+      await deleteTeam(loserTeam);
 
       // Step 2: Update winner's Pokemon EXP
-      txMessage.textContent = "Adding EXP to your Pokemon...";
-      // Convert stored level + in-level exp to cumulative exp before adding reward
-      const cumulativeExp = getTotalExpToLevel(currentLevel) + currentExp;
-      const newTotalExp = cumulativeExp + expReward;
-      const levelData = calculateLevelFromExp(newTotalExp);
-      const newLevel = Math.max(currentLevel, levelData.level); // wins should not reduce level
-      const expAtLevelStart = getTotalExpToLevel(newLevel);
-      const storedExpForLevel = Math.max(0, newTotalExp - expAtLevelStart);
-      const levelsGained = Math.max(0, newLevel - currentLevel);
-      const statIncrease = levelsGained * 10;
-
-      const updatePayload = {
-        exp: storedExpForLevel,
-        level: newLevel,
-      };
-
-      if (levelsGained > 0) {
-        updatePayload.hp = (myPokemon.hp || 100) + statIncrease;
-        updatePayload.attack = (myPokemon.attack || 50) + statIncrease;
-        updatePayload.defense = (myPokemon.defense || 50) + statIncrease;
-        updatePayload.speed = (myPokemon.speed || 50) + statIncrease;
-      }
-
-      await supabase
-        .from("user_pokemon")
-        .update(updatePayload)
-        .eq("id", myPokemon.id);
+      txMessage.textContent =
+        battleMode === "team"
+          ? "Adding EXP to your team..."
+          : "Adding EXP to your Pokemon...";
+      await awardExpToTeam(winnerTeam, expReward);
 
       // Step 3: Try to claim PKCHP from rewards contract
       txMessage.textContent = "Claiming PKCHP rewards...";
@@ -720,21 +894,41 @@ document.addEventListener("DOMContentLoaded", async () => {
       hideTxModal();
 
       if (claimSuccess) {
-        alert(`🎉 Rewards claimed!\n+${rewardAmount} PKCHP\n+${expReward} EXP`);
+        showRewardNotice(
+          "REWARDS INCOMING",
+          "Please wait for your reward and Pokemon EXP to be sent."
+        );
       } else {
-        alert(
-          `🎉 Victory recorded!\n+${expReward} EXP\n\nPKCHP rewards may take a moment to reflect in your balance.`
+        showRewardNotice(
+          "REWARDS PENDING",
+          "Please wait for your reward and Pokemon EXP to be sent."
         );
       }
 
-      clearRoomData();
-      window.location.href = "pvp-lobby.html";
+      const finishAndReturn = () => {
+        rewardNoticeModal.classList.remove("show");
+        clearRoomData();
+        window.location.href = "pvp-lobby.html";
+      };
+
+      rewardNoticeOk.onclick = finishAndReturn;
+      setTimeout(finishAndReturn, 2500);
     } catch (err) {
       console.error("Claim error:", err);
       hideTxModal();
-      alert("Victory recorded! Some rewards may process later.");
-      clearRoomData();
-      window.location.href = "pvp-lobby.html";
+      showRewardNotice(
+        "REWARDS PENDING",
+        "Please wait for your reward and Pokemon EXP to be sent."
+      );
+
+      const finishAndReturn = () => {
+        rewardNoticeModal.classList.remove("show");
+        clearRoomData();
+        window.location.href = "pvp-lobby.html";
+      };
+
+      rewardNoticeOk.onclick = finishAndReturn;
+      setTimeout(finishAndReturn, 2500);
     }
   });
 
@@ -749,9 +943,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const winnerWallet = isHost ? room.guest_wallet : room.host_wallet;
 
+      const losingTeam = battleMode === "team" ? initialMyTeam : [myPokemon];
       // Step 1: Delete the lost Pokemon
-      txMessage.textContent = "Removing your Pokemon...";
-      await supabase.from("user_pokemon").delete().eq("id", myPokemon.id);
+      txMessage.textContent =
+        battleMode === "team"
+          ? "Removing your team..."
+          : "Removing your Pokemon...";
+      await deleteTeam(losingTeam);
 
       // Step 2: Transfer bet amount to winner
       txMessage.textContent = "Transferring bet to winner...";
@@ -834,7 +1032,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       hideTxModal();
-      alert(`🎉 Forfeit rewards claimed!\n+${rewardAmount} PKCHP`);
+      alert(`?? Forfeit rewards claimed!\n+${rewardAmount} PKCHP`);
       clearRoomData();
       window.location.href = "pvp-lobby.html";
     } catch (err) {
@@ -867,10 +1065,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     txModal.classList.remove("show");
   }
 
+  function showRewardNotice(title, message) {
+    rewardNoticeTitle.textContent = title;
+    rewardNoticeMessage.textContent = message;
+    rewardNoticeModal.classList.add("show");
+  }
+
   function clearRoomData() {
     localStorage.removeItem("PVP_ROOM_ID");
     localStorage.removeItem("PVP_ROOM_CODE");
     localStorage.removeItem("PVP_IS_HOST");
+    localStorage.removeItem("PVP_BATTLE_MODE");
   }
 
   window.addEventListener("beforeunload", () => {
@@ -880,3 +1085,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await init();
 });
+
+

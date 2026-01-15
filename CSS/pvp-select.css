@@ -43,9 +43,16 @@
     gap: 10px;
 }
 
+.mode-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .room-label,
 .bet-label,
-.timer-label {
+.timer-label,
+.mode-label {
     color: #6b7280;
     font-size: 0.85rem;
     text-transform: uppercase;
@@ -62,6 +69,12 @@
     font-family: 'Press Start 2P', cursive;
     font-size: 1rem;
     color: #ffd86b;
+}
+
+.mode-value {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.9rem;
+    color: #22c55e;
 }
 
 .timer-value {
@@ -141,6 +154,42 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 20px;
+}
+
+.team-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+}
+
+.team-slot {
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.team-slot img {
+    width: 60px;
+    height: 60px;
+    image-rendering: pixelated;
+}
+
+.team-slot .slot-name {
+    font-size: 0.8rem;
+    color: #fff;
+}
+
+.team-slot.empty {
+    color: #6b7280;
+    font-size: 0.75rem;
 }
 
 .empty-slot {
@@ -311,6 +360,16 @@
     color: #fff;
     margin-bottom: 25px;
     flex-wrap: wrap;
+}
+
+.title-count {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.8rem;
+    color: #ffd86b;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(255, 216, 110, 0.1);
+    border: 1px solid rgba(255, 216, 110, 0.4);
 }
 
 .title-icon {
@@ -793,6 +852,17 @@
     background: rgba(255, 255, 255, 0.03);
     border-radius: 16px;
     margin-bottom: 20px;
+}
+
+.confirm-team {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.confirm-team .team-slot {
+    min-height: 90px;
 }
 
 .confirm-pokemon img {
