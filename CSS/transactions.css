@@ -724,6 +724,29 @@
     padding: 25px;
 }
 
+/* Clear history modal specifics */
+.tx-modal-warning {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    padding: 14px 16px;
+    border-radius: 12px;
+    line-height: 1.4;
+    margin-bottom: 18px;
+}
+
+.tx-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.tx-clear-status {
+    margin-top: 14px;
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
 /* Modal Pokemon Header */
 .tx-modal-pokemon-header {
     display: flex;

@@ -36,6 +36,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const modal = document.getElementById("txDetailModal");
   const modalBody = document.getElementById("txModalBody");
   const modalClose = document.getElementById("txModalClose");
+  const clearModal = document.getElementById("txClearModal");
+  const clearClose = document.getElementById("txClearClose");
+  const clearCancel = document.getElementById("txClearCancel");
+  const clearConfirm = document.getElementById("txClearConfirm");
+  const clearStatus = document.getElementById("txClearStatus");
 
   // State
   let allTransactions = [];
@@ -499,37 +504,78 @@ document.addEventListener("DOMContentLoaded", async () => {
   // CLEAR HISTORY
   // ============================================================
 
-  clearBtn.addEventListener("click", async () => {
-    if (
-      !confirm(
-        "Are you sure you want to clear all transaction history? This cannot be undone."
-      )
-    ) {
-      return;
+  function showClearModal(show) {
+    if (!clearModal) return;
+    if (show) {
+      clearModal.classList.remove("d-none");
+      if (clearStatus) {
+        clearStatus.classList.add("d-none");
+        clearStatus.textContent = "";
+        clearStatus.style.color = "#9ca3af";
+      }
+      if (clearConfirm) {
+        clearConfirm.disabled = false;
+        clearConfirm.textContent = "Delete All";
+      }
+    } else {
+      clearModal.classList.add("d-none");
     }
+  }
 
-    try {
-      const { error } = await supabase
-        .from("transactions")
-        .delete()
-        .eq("user_id", CURRENT_USER_ID);
+  clearBtn.addEventListener("click", () => showClearModal(true));
+  if (clearClose) clearClose.addEventListener("click", () => showClearModal(false));
+  if (clearCancel) clearCancel.addEventListener("click", () => showClearModal(false));
 
-      if (error) {
-        console.error("Error clearing transactions:", error);
-        alert("Failed to clear history.");
-        return;
+  if (clearConfirm) {
+    clearConfirm.addEventListener("click", async () => {
+      clearConfirm.disabled = true;
+      clearConfirm.textContent = "Deleting...";
+      if (clearStatus) {
+        clearStatus.classList.remove("d-none");
+        clearStatus.style.color = "#9ca3af";
+        clearStatus.textContent = "Removing all transactions...";
       }
 
-      allTransactions = [];
-      filteredTransactions = [];
-      renderTransactions();
-      updateStats();
-      updatePagination();
-      alert("Transaction history cleared.");
-    } catch (err) {
-      console.error("Exception clearing transactions:", err);
-    }
-  });
+      try {
+        const { error } = await supabase
+          .from("transactions")
+          .delete()
+          .eq("user_id", CURRENT_USER_ID);
+
+        if (error) {
+          console.error("Error clearing transactions:", error);
+          if (clearStatus) {
+            clearStatus.style.color = "#ef4444";
+            clearStatus.textContent = "Failed to clear history. Try again.";
+          }
+          clearConfirm.disabled = false;
+          clearConfirm.textContent = "Delete All";
+          return;
+        }
+
+        allTransactions = [];
+        filteredTransactions = [];
+        renderTransactions();
+        updateStats();
+        updatePagination();
+
+        if (clearStatus) {
+          clearStatus.style.color = "#22c55e";
+          clearStatus.textContent = "History cleared.";
+        }
+
+        setTimeout(() => showClearModal(false), 700);
+      } catch (err) {
+        console.error("Exception clearing transactions:", err);
+        if (clearStatus) {
+          clearStatus.style.color = "#ef4444";
+          clearStatus.textContent = "Unexpected error. Please retry.";
+        }
+        clearConfirm.disabled = false;
+        clearConfirm.textContent = "Delete All";
+      }
+    });
+  }
 
   // ============================================================
   // TRANSACTION DETAIL MODAL

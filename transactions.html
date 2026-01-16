@@ -206,6 +206,26 @@
         </div>
     </div>
 
+    <!-- CLEAR HISTORY MODAL -->
+    <div id="txClearModal" class="tx-modal d-none">
+        <div class="tx-modal-content">
+            <div class="tx-modal-header">
+                <h2 class="tx-modal-title">Clear Transaction History</h2>
+                <button class="tx-modal-close" id="txClearClose">&times;</button>
+            </div>
+            <div class="tx-modal-body">
+                <p class="tx-modal-warning">
+                    This will permanently delete all transactions for your account. This action cannot be undone.
+                </p>
+                <div class="tx-modal-actions">
+                    <button type="button" class="btn btn-outline-light" id="txClearCancel">Keep History</button>
+                    <button type="button" class="btn btn-danger" id="txClearConfirm">Delete All</button>
+                </div>
+                <div id="txClearStatus" class="tx-clear-status d-none"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
