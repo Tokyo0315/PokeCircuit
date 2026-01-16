@@ -1,4 +1,4 @@
-// Collection Page - View and manage owned Pokemon
+﻿// Collection Page - View and manage owned Pokemon
 
 document.addEventListener("DOMContentLoaded", async () => {
   const grid = document.getElementById("collectionGrid");
@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
 
-      <div class="collection-price">PKCHP Owned</div>
+      <div class="collection-price">Owned</div>
       <div class="collection-time">Acquired: ${formatDate(
         entry.acquiredAt
       )}</div>

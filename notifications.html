@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PokeCircuit Arena - Transactions</title>
+    <title>PokeCircuit Arena - Notifications</title>
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;600&display=swap"
@@ -13,9 +13,9 @@
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Shared styles -->
+    <!-- Shared + Page styles -->
     <link rel="stylesheet" href="CSS/home.css">
-    <link rel="stylesheet" href="CSS/transactions.css">
+    <link rel="stylesheet" href="CSS/notifications.css">
 </head>
 
 <body class="home-body">
@@ -52,7 +52,7 @@
                             <a href="pvp-lobby.html" class="pc-nav-link">PVP Battle</a>
                         </div>
                     </div>
-                    <a href="transactions.html" class="pc-nav-link pc-nav-active">Transactions</a>
+                    <a href="transactions.html" class="pc-nav-link">Transactions</a>
                 </nav>
 
                 <!-- Right side -->
@@ -69,17 +69,21 @@
                         <span class="pc-pokechip-label">PKCHP</span>
                         <span id="pkchpBalance" class="pc-pokechip-amount">0</span>
                     </div>
+
+                    <!-- Notifications -->
                     <div class="pc-notif-shell">
                         <button class="pc-notif-btn" id="notifBell" type="button" aria-label="Notifications">
                             <span class="pc-notif-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                     stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9">
+                                    </path>
                                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                                 </svg>
                             </span>
                             <span class="pc-notif-ping d-none" id="notifPing">0</span>
                         </button>
+
                         <div class="pc-notif-dropdown d-none" id="notifDropdown">
                             <div class="pc-notif-dropdown-header">
                                 <div>
@@ -96,6 +100,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="pc-trainer-badge">
                         <span class="pc-trainer-label">Trainer</span>
                         <span class="pc-trainer-name" data-trainer-name>Trainer</span>
@@ -115,143 +120,104 @@
     <!-- MAIN CONTENT -->
     <main class="container py-5">
 
-        <!-- HEADER -->
-        <section class="tx-header mb-4">
-            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                <div>
-                    <h1 class="tx-title">
-                        <span class="tx-icon">📜</span> TRANSACTION HISTORY
-                    </h1>
-                    <p class="tx-subtitle mb-0">
-                        Track all your arena activities, trades, and battle records.
-                    </p>
-                </div>
-
-                <div class="tx-stats d-flex gap-3">
-                    <div class="tx-stat-card">
-                        <span class="tx-stat-value" id="totalTxCount">0</span>
-                        <span class="tx-stat-label">Total</span>
-                    </div>
-                    <div class="tx-stat-card tx-stat-win">
-                        <span class="tx-stat-value" id="winCount">0</span>
-                        <span class="tx-stat-label">Wins</span>
-                    </div>
-                    <div class="tx-stat-card tx-stat-loss">
-                        <span class="tx-stat-value" id="lossCount">0</span>
-                        <span class="tx-stat-label">Losses</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FILTERS -->
-        <section class="tx-filters mb-4">
-            <div class="tx-filter-group">
-                <button type="button" class="tx-filter-btn active" data-filter="all">
-                    <span class="filter-icon">🔮</span> All
-                </button>
-                <button type="button" class="tx-filter-btn" data-filter="market_buy">
-                    <span class="filter-icon">🛒</span> Market
-                </button>
-                <button type="button" class="tx-filter-btn" data-filter="p2p">
-                    <span class="filter-icon">🤝</span> P2P
-                </button>
-                <button type="button" class="tx-filter-btn" data-filter="battle">
-                    <span class="filter-icon">⚔️</span> Battles
-                </button>
-                <button type="button" class="tx-filter-btn" data-filter="success">
-                    <span class="filter-icon">✅</span> Success
-                </button>
-                <button type="button" class="tx-filter-btn" data-filter="failed">
-                    <span class="filter-icon">❌</span> Failed
-                </button>
-            </div>
-
-            <button type="button" class="tx-clear-btn" id="clearHistoryBtn">
-                🗑️ Clear History
-            </button>
-        </section>
-
-        <!-- TRANSACTIONS TABLE -->
-        <section class="tx-table-wrapper">
-            <div class="tx-table-container">
-                <table class="tx-table">
-                    <thead>
-                        <tr>
-                            <th class="th-type">Type</th>
-                            <th class="th-pokemon">Pokémon</th>
-                            <th class="th-amount">Amount</th>
-                            <th class="th-details">Details</th>
-                            <th class="th-status">Status</th>
-                            <th class="th-time">Time</th>
-                        </tr>
-                    </thead>
-                    <tbody id="txTableBody">
-                        <!-- Transactions will be inserted here -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Empty State -->
-            <div id="txEmptyState" class="tx-empty-state d-none">
-                <div class="tx-empty-icon">📭</div>
-                <h3>No Transactions Yet</h3>
-                <p>Start trading Pokémon or battling to see your history here!</p>
-                <div class="tx-empty-actions">
-                    <a href="market.html" class="btn btn-warning">Browse Marketplace</a>
-                    <a href="match-setup.html" class="btn btn-outline-light">Enter Battle</a>
-                </div>
-            </div>
-
-            <!-- Loading State -->
-            <div id="txLoading" class="tx-loading">
-                <div class="tx-loading-spinner"></div>
-                <p>Loading transactions...</p>
-            </div>
-        </section>
-
-        <!-- PAGINATION -->
-        <section class="tx-pagination mt-4" id="txPagination">
-            <button class="tx-page-btn" id="prevPageBtn" disabled>← Prev</button>
-            <span class="tx-page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
-            <button class="tx-page-btn" id="nextPageBtn">Next →</button>
-        </section>
-
-    </main>
-    <!-- TRANSACTION DETAIL MODAL -->
-    <div id="txDetailModal" class="tx-modal d-none">
-        <div class="tx-modal-content">
-            <div class="tx-modal-header">
-                <h2 class="tx-modal-title">Transaction Details</h2>
-                <button class="tx-modal-close" id="txModalClose">&times;</button>
-            </div>
-            <div class="tx-modal-body" id="txModalBody">
-                <!-- Details will be inserted here -->
-            </div>
-        </div>
-    </div>
-    <!-- CLEAR HISTORY MODAL -->
-    <div id="txClearModal" class="tx-modal d-none">
-        <div class="tx-modal-content">
-            <div class="tx-modal-header">
-                <h2 class="tx-modal-title">Clear Transaction History</h2>
-                <button class="tx-modal-close" id="txClearClose">&times;</button>
-            </div>
-            <div class="tx-modal-body">
-                <p class="tx-modal-warning">
-                    This will permanently delete all transactions for your account. This action cannot be undone.
+        <!-- HERO -->
+        <section class="notif-hero mb-5">
+            <div class="notif-hero-copy">
+                <p class="notif-kicker">Live updates</p>
+                <h1 class="notif-title">P2P Notification Center</h1>
+                <p class="notif-subtitle">
+                    See when your Pokemon listings get snapped up in real time. Each alert shows the buyer, their
+                    wallet, and the exact PKCHP you earned.
                 </p>
-                <div class="tx-modal-actions">
-                    <button type="button" class="btn btn-outline-light" id="txClearCancel">Keep History</button>
-                    <button type="button" class="btn btn-danger" id="txClearConfirm">Delete All</button>
+                <div class="notif-hero-tags">
+                    <span class="notif-pill live">LIVE</span>
+                    <span class="notif-pill glow" id="notifHeroCount">0 alerts tracked</span>
+                    <span class="notif-pill">Auto-refresh</span>
                 </div>
-                <div id="txClearStatus" class="tx-clear-status d-none"></div>
             </div>
-        </div>
-    </div>
+            <div class="notif-hero-card">
+                <div class="notif-hero-card-inner">
+                    <p class="mb-1 text-muted text-uppercase small">Most recent sale</p>
+                    <h3 class="notif-hero-sale" id="notifHeroSale">Waiting for your first sale...</h3>
+                    <p class="notif-hero-meta mb-0" id="notifHeroMeta">Stay on this page to get instant alerts.</p>
+                    <div class="notif-hero-meter mt-3">
+                        <div class="notif-hero-meter-fill" id="notifHeroMeter"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANELS -->
+        <section class="row g-4 notif-panels">
+            <div class="col-lg-8">
+                <div class="notif-panel">
+                        <div class="notif-panel-header">
+                            <div>
+                                <p class="notif-kicker mb-1">Real-time feed</p>
+                                <h3 class="notif-panel-title mb-0">What is new?</h3>
+                            </div>
+                            <div class="notif-panel-actions">
+                                <button class="chip-btn" id="notifFilterNewss">News</button>
+                                <button class="chip-btn outline" id="notifFilterSales">Sale alerts</button>
+                                <button class="chip-btn outline" id="notifFilterAll">All</button>
+                            </div>
+                        </div>
+                    <div class="notif-panel-body">
+                        <div id="notifEmpty" class="notif-empty">
+                            <div class="notif-empty-icon">📪</div>
+                            <h4 class="mb-2">No alerts yet</h4>
+                            <p class="mb-0">
+                                When a trainer buys one of your Pokemon in the P2P market, the alert will land here
+                                instantly.
+                            </p>
+                        </div>
+                        <div id="notifList" class="notif-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="notif-side-card">
+                    <div class="notif-side-header">
+                        <p class="notif-kicker mb-1">Status</p>
+                        <h4 class="mb-0">Live connection</h4>
+                    </div>
+                    <div class="notif-connection" id="notifConnection">
+                        <span class="dot live"></span>
+                        <div>
+                            <div class="notif-connection-title">Connecting to Supabase</div>
+                            <div class="notif-connection-sub text-muted">Listening for P2P sales tied to your wallet.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="notif-side-metrics">
+                        <div class="notif-metric">
+                            <span class="metric-label">Total alerts</span>
+                            <span class="metric-value" id="metricTotal">0</span>
+                        </div>
+                        <div class="notif-metric">
+                            <span class="metric-label">Last buyer</span>
+                            <span class="metric-value" id="metricBuyer">-</span>
+                        </div>
+                        <div class="notif-metric">
+                            <span class="metric-label">Highest sale</span>
+                            <span class="metric-value" id="metricHighSale">0 PKCHP</span>
+                        </div>
+                    </div>
+                    <div class="notif-tip">
+                        <h6 class="mb-1">Tip</h6>
+                        <p class="mb-0">
+                            Keep this tab open while trading. You'll see the sale notice the moment a trainer confirms a
+                            transaction on-chain.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
-
     <script>
         window.CURRENT_USER_ID = localStorage.getItem("CURRENT_USER_ID");
         window.CURRENT_WALLET_ADDRESS =
@@ -283,16 +249,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="JavaScript/db.js"></script>
 
-    <!-- Game helpers -->
+    <!-- Helpers -->
     <script src="JavaScript/pokeApi.js"></script>
 
     <!-- Page scripts -->
-    <script src="JavaScript/transactions.js"></script>
     <script src="JavaScript/notifications.js"></script>
     <script src="JavaScript/home.js"></script>
+
 </body>
 
 </html>
+
+
 
 
 

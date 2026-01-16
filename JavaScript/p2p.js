@@ -560,6 +560,32 @@ ${
       }
     });
   }
+
+  let refreshTimer = null;
+
+  const scheduleRefresh = () => {
+    if (refreshTimer) clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => {
+      loadListings();
+    }, 400);
+  };
+
+  const subscribeListingChanges = () => {
+    if (!window.supabase) return;
+
+    supabase
+      .channel("p2p-listings-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "p2p_listings" },
+        () => {
+          scheduleRefresh();
+        }
+      )
+      .subscribe();
+  };
+
   await loadWalletBalance();
   await loadListings();
+  subscribeListingChanges();
 });

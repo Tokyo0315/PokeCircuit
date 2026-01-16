@@ -205,6 +205,123 @@
     margin-left: auto;
 }
 
+.pc-notif-shell {
+    position: relative;
+}
+
+.pc-notif-btn {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 216, 110, 0.5);
+    background: rgba(255, 216, 110, 0.08);
+    color: #ffd86b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pc-notif-btn:hover {
+    box-shadow: 0 0 14px rgba(255, 216, 110, 0.35);
+    transform: translateY(-1px);
+}
+
+.pc-notif-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.pc-notif-ping {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #041307;
+    border-radius: 999px;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pc-notif-dropdown {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    width: 320px;
+    background: rgba(10, 12, 16, 0.98);
+    border: 1px solid rgba(255, 216, 110, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+    padding: 0.9rem;
+    backdrop-filter: blur(8px);
+    z-index: 50;
+}
+
+.pc-notif-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.notif-kicker {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #67e8f9;
+    font-weight: 700;
+    font-size: 0.75rem;
+}
+
+.pc-notif-count {
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(255, 216, 110, 0.15);
+    border: 1px solid rgba(255, 216, 110, 0.35);
+    color: #ffd86b;
+    font-weight: 700;
+}
+
+.pc-notif-dropdown-body {
+    max-height: 260px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.pc-notif-dropdown-item {
+    padding: 0.55rem 0.6rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pc-notif-dropdown-item .title {
+    color: #fefce8;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.pc-notif-dropdown-item .meta {
+    color: #9ca3af;
+    font-size: 0.78rem;
+}
+
+.pc-notif-dropdown-footer {
+    margin-top: 0.5rem;
+    text-align: right;
+}
+
 .pc-trainer-badge {
     display: flex;
     align-items: center;
@@ -1352,3 +1469,4 @@ section,
         gap: 1rem;
     }
 }
+

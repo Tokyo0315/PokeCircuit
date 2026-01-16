@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -63,11 +63,37 @@
 
                     <!-- PokeChip currency chip -->
                     <div class="pc-pokechip-chip">
-                        <span class="pc-pokechip-icon">◎</span>
+                        <span class='pc-pokechip-icon'>◎</span>
                         <span class="pc-pokechip-label">PKCHP</span>
                         <span id="pkchpBalance" class="pc-pokechip-amount">0</span>
                     </div>
-
+                    <div class="pc-notif-shell">
+                        <button class="pc-notif-btn" id="notifBell" type="button" aria-label="Notifications">
+                            <span class="pc-notif-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                            </span>
+                            <span class="pc-notif-ping d-none" id="notifPing">0</span>
+                        </button>
+                        <div class="pc-notif-dropdown d-none" id="notifDropdown">
+                            <div class="pc-notif-dropdown-header">
+                                <div>
+                                    <p class="notif-kicker mb-0">Live Feed</p>
+                                    <h6 class="mb-0">P2P Alerts</h6>
+                                </div>
+                                <span class="pc-notif-count" id="notifCount">0</span>
+                            </div>
+                            <div class="pc-notif-dropdown-body" id="notifDropdownList">
+                                <p class="text-muted small mb-0">No notifications yet.</p>
+                            </div>
+                            <div class="pc-notif-dropdown-footer">
+                                <a href="notifications.html" class="pc-nav-link">Open full page</a>
+                            </div>
+                        </div>
+                    </div>
                     <div class="pc-trainer-badge">
                         <span class="pc-trainer-label">Trainer</span>
                         <span class="pc-trainer-name" data-trainer-name>Trainer</span>
@@ -89,7 +115,7 @@
         <section class="market-header mb-4">
             <h1 class="mb-1 market-title">Marketplace</h1>
             <p class="text-secondary mb-3">
-                Browse Pokémons from all regions.
+                Browse Pokemons from all regions.
             </p>
 
             <!-- FEATURED POKEMON SECTION -->
@@ -103,7 +129,7 @@
                     <img id="featuredSprite" class="featured-img" src="" alt="Featured Pokemon">
 
                     <div class="featured-info">
-                        <h2 id="featuredName" class="featured-name">FEATURED POKÉMON</h2>
+                        <h2 id="featuredName" class="featured-name">FEATURED POKEMON</h2>
                         <p id="featuredRarity" class="featured-rarity"></p>
 
                         <p class="featured-desc">
@@ -121,7 +147,8 @@
             <!-- Rarity Filter + Timer Row -->
             <div class="market-filter-row">
                 <div class="btn-group market-filter-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-light market-filter-btn active" data-filter="all">
+                    <button type="button" class="btn btn-sm btn-outline-light market-filter-btn active"
+                        data-filter="all">
                         All
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-success market-filter-btn" data-filter="common">
@@ -163,7 +190,7 @@
                     <img id="buyModalSprite" src="" alt="Pokemon" class="buy-modal-sprite">
                 </div>
                 <div class="buy-modal-right">
-                    <h3 id="buyModalName" class="buy-modal-name">POKÉMON NAME</h3>
+                    <h3 id="buyModalName" class="buy-modal-name">POKÃ‰MON NAME</h3>
                     <p class="buy-modal-rarity">
                         Rarity: <span id="buyModalRarity">Common</span>
                     </p>
@@ -279,8 +306,12 @@
     <script src="JavaScript/market.js"></script>
 
     <!-- LOAD HOME.JS LAST ALWAYS -->
+    <script src="JavaScript/notifications.js"></script>
     <script src="JavaScript/home.js"></script>
-
 </body>
 
 </html>
+
+
+
+
