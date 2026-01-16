@@ -1,8 +1,4 @@
-/* ---------------------------------------------------------
-   COLLECTION PAGE – MATCH MARKETPLACE CARD DESIGN EXACTLY
---------------------------------------------------------- */
-
-/* --- TITLE + SUBTITLE --- */
+/* TITLE + SUBTITLE */
 .collection-title {
     font-family: 'Press Start 2P', cursive;
     font-size: 1.4rem;
@@ -21,9 +17,7 @@
     color: #e5e7eb;
 }
 
-/* ---------------------------------------------------------
-   OUTER CARD WRAPPER (GLOW FRAME SAME AS MARKETPLACE)
---------------------------------------------------------- */
+/* OUTER CARD WRAPPER */
 .pokemon-card-tcg {
     position: relative;
     padding: 0;
@@ -43,9 +37,7 @@
         0 0 60px rgba(0, 0, 0, 0.75);
 }
 
-/* ---------------------------------------------------------
-   INNER COLORED CARD (this gives NORMAL/GRASS/FIRE colors)
---------------------------------------------------------- */
+/* INNER COLORED CARD */
 
 .pokemon-card-inner {
     padding: 1.5rem 1rem 1.4rem;
@@ -70,9 +62,7 @@
     z-index: 2;
 }
 
-/* ---------------------------------------------------------
-   RARITY BADGE (TOP BUBBLE)
---------------------------------------------------------- */
+/* RARITY BADGE */
 .rarity-badge {
     position: absolute;
     top: -0.6rem;
@@ -113,9 +103,7 @@
     box-shadow: 0 0 12px rgba(250, 250, 250, 0.7);
 }
 
-/* ---------------------------------------------------------
-   SPRITE
---------------------------------------------------------- */
+/* SPRITE */
 .pokemon-card-inner .pokemon-img {
     width: 7rem;
     height: 7rem;
@@ -138,9 +126,7 @@
     margin-bottom: 0.7rem;
 }
 
-/* ---------------------------------------------------------
-   STATS GRID (same as marketplace)
---------------------------------------------------------- */
+/* STATS GRID */
 .stats-box {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -161,9 +147,7 @@
     margin-right: 0.3rem;
 }
 
-/* ---------------------------------------------------------
-   PRICE PILL (same as market)
---------------------------------------------------------- */
+/* PRICE PILL */
 .collection-price {
     display: inline-flex;
     padding: 0.35rem 1rem;
@@ -182,9 +166,7 @@
     opacity: 0.65;
 }
 
-/* ---------------------------------------------------------
-   TYPE BACKGROUND COLORS – applied to .pokemon-card-inner
---------------------------------------------------------- */
+/* TYPE BACKGROUND COLORS */
 .type-normal {
     background: #757555;
 }

@@ -1,7 +1,3 @@
-/* -------------------------------------------
-   P2P MARKET STYLE — matches marketplace.css
---------------------------------------------*/
-
 .p2p-seller-tag {
     font-size: 0.85rem;
     color: #87cefa;
@@ -22,7 +18,7 @@
 }
 
 .cancel-p2p-btn {
-    background-color: darkred; /* bootstrap red */
+    background-color: darkred; 
     border: none;
     color: white;
     width: 50%;

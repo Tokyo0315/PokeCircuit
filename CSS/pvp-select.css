@@ -1,6 +1,6 @@
 /* ============================================================
    POKECIRCUIT ARENA - PVP POKEMON SELECTION
-   Intense selection screen with real-time sync
+   Selection lobby with realtime sync between host and guest
 =============================================================== */
 
 /* ============================================================
@@ -17,7 +17,7 @@
 }
 
 /* ============================================================
-   BATTLE INFO HEADER
+   BATTLE INFO HEADER (room code, bet, mode)
 =============================================================== */
 
 .battle-info-header {
@@ -97,7 +97,7 @@
 }
 
 /* ============================================================
-   PLAYERS STATUS
+   PLAYERS STATUS (you vs opponent panels)
 =============================================================== */
 
 .players-status {

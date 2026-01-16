@@ -1,17 +1,13 @@
-// ============================================================
-// POKECIRCUIT ARENA - LOGIN & REGISTRATION
-// With First-Time Welcome Bonus (250 PKCHP)
-// Uses db.js for Supabase connection
-// ============================================================
+// Auth entrypoint: wallet connection, username setup, and welcome bonus handling
 
 console.log("app.js LOADED!");
 
-// Contract addresses
+// Contract addresses for PKCHP, arena rewards, and faucet payouts
 const PKCHP_ADDRESS = "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
 const BATTLE_REWARDS_ADDRESS = "0x80617C5F2069eF97792F77e1F28A4aD410B80578";
 const WELCOME_FAUCET_ADDRESS = "0x3c37FfC59f2018d95c2A2e16730aff18a6742F96";
 
-// Welcome bonus amount
+// Welcome bonus amount (in PKCHP)
 const WELCOME_BONUS_AMOUNT = 250;
 
 // Welcome Bonus Faucet ABI
@@ -50,7 +46,7 @@ const WELCOME_FAUCET_ABI = [
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
-  // DOM elements
+  // UI hooks for login/register flow
   const connectBtn = document.getElementById("connectWalletBtn");
   const walletStatus = document.getElementById("walletStatus");
   const usernameInput = document.getElementById("username");
@@ -63,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // State
+  // Session state
   let connectedWallet = null;
   let existingUser = null;
 
@@ -73,10 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sepolia: "0xaa36a7",
   };
 
-  // ============================================================
-  // HELPER FUNCTIONS
-  // ============================================================
-
+  // Helper functions
   function shortenAddress(addr) {
     return addr.substring(0, 6) + "..." + addr.substring(addr.length - 4);
   }
@@ -113,15 +106,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ============================================================
-  // WELCOME BONUS FUNCTIONS
-  // ============================================================
-
+  // Welcome bonus claim via smart contract (falls back to DB record)
   async function claimWelcomeBonus(userId, walletAddress) {
     console.log("🎁 Attempting to claim welcome bonus...");
 
     try {
-      // Check if faucet contract is configured
       if (
         WELCOME_FAUCET_ADDRESS &&
         WELCOME_FAUCET_ADDRESS.length > 0 &&
@@ -137,26 +126,21 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         try {
-          // Check if user can claim
           const [canClaimResult, reason] = await faucetContract.canClaim(
             walletAddress
           );
 
           if (!canClaimResult) {
             console.warn("Cannot claim from faucet:", reason);
-            // Still record in database as success (for tracking)
             await recordBonusClaim(userId, walletAddress, null, "success");
             return { success: true, txHash: null, message: reason };
           }
 
-          // Claim from faucet contract
           console.log("Claiming from faucet contract...");
           const tx = await faucetContract.claimWelcomeBonus();
           const receipt = await tx.wait();
 
           console.log("✓ Welcome bonus claimed from faucet:", receipt.hash);
-
-          // Record in database
           await recordBonusClaim(
             userId,
             walletAddress,
@@ -166,19 +150,16 @@ document.addEventListener("DOMContentLoaded", () => {
           return { success: true, txHash: receipt.hash };
         } catch (contractErr) {
           console.warn("Faucet claim failed:", contractErr.message);
-          // Record as success anyway (tracking purposes)
           await recordBonusClaim(userId, walletAddress, null, "success");
           return { success: true, txHash: null, pending: false };
         }
       } else {
-        // No faucet configured - just record in database
         console.log("Faucet not configured, recording bonus in database only");
         await recordBonusClaim(userId, walletAddress, null, "success");
         return { success: true, txHash: null };
       }
     } catch (err) {
       console.error("Welcome bonus error:", err);
-      // Still try to record
       try {
         await recordBonusClaim(userId, walletAddress, null, "success");
       } catch (e) {}
@@ -193,7 +174,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // Update user record (if columns exist)
       try {
         await window.supabase
           .from("users")
@@ -207,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn("Could not update bonus columns (may not exist):", e);
       }
 
-      // Try to insert into welcome_bonuses audit table (may not exist)
       try {
         await window.supabase.from("welcome_bonuses").insert({
           user_id: userId,
@@ -220,7 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn("welcome_bonuses table may not exist:", e);
       }
 
-      // Log as transaction
       await window.supabase.from("transactions").insert({
         user_id: userId,
         wallet_address: walletAddress,
@@ -300,10 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return data;
   }
 
-  // ============================================================
-  // CONNECT WALLET
-  // ============================================================
-
+  // Connect wallet button handler
   connectBtn.addEventListener("click", async () => {
     if (typeof window.ethereum === "undefined") {
       showStatus("❌ MetaMask not found. Please install MetaMask.");
@@ -337,7 +312,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       showStatus(`🟢 Connected: ${shortenAddress(connectedWallet)}`, true);
 
-      // Wait for Supabase to be ready
       try {
         await waitForSupabase(3000);
       } catch (e) {
@@ -346,11 +320,9 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
 
-      // Check if user already exists
       existingUser = await checkExistingUser(connectedWallet);
 
       if (existingUser) {
-        // Existing user - auto login
         console.log("✓ Existing user found:", existingUser.username);
 
         localStorage.setItem("CURRENT_USER_ID", existingUser.id);
@@ -362,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
         registerBtn.disabled = false;
         updateRegisterButtonLabel();
 
-        // Check if they need to claim bonus
         if (existingUser.claimed_welcome_bonus === false) {
           welcomeMessage.innerHTML = `
             <span class="text-warning">🎁 You have an unclaimed welcome bonus!</span>
@@ -373,7 +344,6 @@ document.addEventListener("DOMContentLoaded", () => {
           welcomeMessage.style.display = "block";
         }
       } else {
-        // New user - enable registration
         usernameInput.disabled = false;
         registerBtn.disabled = false;
         registerBtn.textContent = "REGISTER & CLAIM 250 PKCHP";
@@ -389,10 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ============================================================
-  // REGISTER / LOGIN
-  // ============================================================
-
+  // Register or login submission
   registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -403,7 +370,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const username = usernameInput.value.trim();
 
-    // Existing user - allow username update then login
     if (existingUser) {
       const currentUsername = existingUser.username || "";
 
@@ -461,7 +427,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // New user - register
     if (!username) {
       alert("Please enter a trainer username.");
       return;
@@ -477,13 +442,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Disable form during registration
     registerBtn.disabled = true;
     registerBtn.textContent = "REGISTERING...";
     usernameInput.disabled = true;
 
     try {
-      // Register new user
       const newUser = await registerNewUser(username, connectedWallet);
 
       if (!newUser) {
@@ -493,7 +456,6 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("CURRENT_USER_ID", newUser.id);
       localStorage.setItem("trainerUsername", username);
 
-      // Show bonus claiming message
       registerBtn.textContent = "CLAIMING BONUS...";
       welcomeMessage.innerHTML = `
         <div class="bonus-claiming">
@@ -502,7 +464,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
 
-      // Claim welcome bonus
       const bonusResult = await claimWelcomeBonus(newUser.id, connectedWallet);
 
       if (bonusResult.success) {
@@ -530,7 +491,6 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }
 
-      // Play sound and redirect
       const registerSound = new Audio(
         "https://www.myinstants.com/media/sounds/ichooseyou.mp3"
       );
@@ -567,7 +527,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   async function handleLogin(user) {
-    // Check if bonus needs claiming
     if (user.claimed_welcome_bonus === false) {
       registerBtn.textContent = "CLAIMING BONUS...";
 
@@ -582,7 +541,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Play sound and redirect
     const registerSound = new Audio(
       "https://www.myinstants.com/media/sounds/ichooseyou.mp3"
     );
@@ -603,10 +561,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  // ============================================================
-  // HANDLE ACCOUNT CHANGES
-  // ============================================================
-
+  // Handle wallet account changes
   usernameInput.addEventListener("input", () => {
     updateRegisterButtonLabel();
   });

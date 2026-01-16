@@ -1,6 +1,4 @@
-// ===============================================================
-// BATTLE ENGINE — WITH PROPER EXP/LEVEL SYSTEM
-// ===============================================================
+// Battle engine for single-player mode: turn-based combat with leveling
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("⚡ Battle loaded");
@@ -8,10 +6,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!window.rarityData) return console.error("rarityData NOT loaded!");
   if (!window.legendaryList) return console.error("legendaryList NOT loaded!");
 
-  // =========================================================
-  // EXP SYSTEM CONFIGURATION
-  // =========================================================
-  
   // EXP required to level up = level * 100
   function getExpForLevel(level) {
     return level * 100;
@@ -32,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return { level, currentExp: remainingExp, expToNext: expNeeded };
   }
 
-  // Convert a stored level into total cumulative EXP required to reach it
+  // Total cumulative EXP required to reach a level
   function getTotalExpToLevel(level) {
     let total = 0;
     for (let l = 1; l < level; l++) {
@@ -41,9 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return total;
   }
 
-  // =========================================================
-  // POKEMON WITH CONFIRMED ANIMATED SPRITES (Gen 1-5)
-  // =========================================================
+  // Pokemon with animated sprites available (Gen 1-5)
   const ANIMATED_POKEMON = {
     common: [
       "bulbasaur", "charmander", "squirtle", "caterpie", "weedle", "pidgey",
@@ -160,9 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     ]
   };
 
-  // =========================================================
-  // CONTRACT CONFIG
-  // =========================================================
+  // Smart contract addresses
   window.PKCHP_ADDRESS = "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
   window.BATTLE_REWARDS_ADDRESS = "0x80617C5F2069eF97792F77e1F28A4aD410B80578";
 
@@ -181,9 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     "function allowance(address owner, address spender) external view returns (uint256)"
   ];
 
-  // =========================================================
-  // LOAD MATCH DATA
-  // =========================================================
+  // Load pending match data
   const saved = localStorage.getItem("PCA_PENDING_MATCH");
   if (!saved) {
     alert("No pending match found!");
@@ -194,15 +182,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const mode = match.mode;
   const tier = match.tier;
 
-  // Generate unique session ID
   const sessionId = ethers.id(`${window.CURRENT_USER_ID}_${Date.now()}`);
   console.log("Session ID:", sessionId);
 
   let currentSessionId = sessionId;
 
-  // =========================================================
-  // TRANSACTION MODAL HELPERS
-  // =========================================================
+  // Transaction modal elements
   const txModal = document.getElementById("txLoadingModal");
   const txTitle = document.getElementById("txLoadingTitle");
   const txMessage = document.getElementById("txLoadingMessage");
@@ -235,14 +220,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (step >= 3) txStep3.className = step === 3 ? "tx-step active" : "tx-step completed";
   }
 
-  // =========================================================
-  // PAY ENTRY FEE ON-CHAIN
-  // =========================================================
+  // Pay entry fee via smart contract
   async function payEntryFee() {
     try {
       if (!window.ethereum) throw new Error("MetaMask not found");
 
-      // Show transaction modal
       showTxModal("ENTERING BATTLE ARENA", "Please confirm the transaction in MetaMask...");
       setTxStep(1);
 
@@ -264,7 +246,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const entryFee = BigInt(match.entryFee) * 10n ** 18n;
       const reward = BigInt(match.chipReward) * 10n ** 18n;
 
-      // Step 2: Approve PKCHP
       setTxStep(2);
       txMessage.textContent = "Approving PKCHP transfer... Please confirm in MetaMask.";
       console.log("Approving PKCHP...");
@@ -274,7 +255,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
       await approveTx.wait();
 
-      // Step 3: Enter battle
       setTxStep(3);
       txMessage.textContent = "Entering battle arena... Almost there!";
       console.log("Entering battle...");
@@ -287,12 +267,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       console.log("✓ Entry fee paid!");
 
-      // Log battle entry transaction
       if (window.logBattleEntry) {
         await window.logBattleEntry(match.entryFee, match.tier, match.mode);
       }
 
-      // Hide modal after success
       hideTxModal();
 
       return true;
@@ -308,9 +286,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const feePaid = await payEntryFee();
   if (!feePaid) return;
 
-  // =========================================================
-  // SPRITE HELPER FUNCTIONS
-  // =========================================================
+  // Sprite URL helpers
   function getAnimatedSpriteUrl(pokemonName, isBack = false) {
     const name = pokemonName.toLowerCase().replace(/\s+/g, "-");
     const folder = isBack ? "ani-back" : "ani";
@@ -334,9 +310,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     imgElement.src = animatedUrl;
   }
 
-  // =========================================================
-  // LOAD/CREATE BATTLE SESSION
-  // =========================================================
+  // Load existing session or create new one
   async function loadSession() {
     let { data, error } = await supabase
       .from("battle_sessions")
@@ -428,9 +402,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const noticeMessage = document.getElementById("noticeMessage");
   const noticeOkBtn = document.getElementById("noticeOkBtn");
 
-  // =========================================================
-  // TYPE CHART
-  // =========================================================
+  // Type effectiveness chart
   const TYPE_CHART = {
     normal: { rock: 0.5, ghost: 0, steel: 0.5 },
     fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2 },
@@ -473,9 +445,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     aiPokemon.types = aiPokemon.types || ["normal"];
   }
 
-  // =========================================================
-  // RENDER FUNCTIONS
-  // =========================================================
+  // Render Pokemon card with stats
   function renderCard(card, mon, hp) {
     const level = mon.level || 1;
     const maxHp = mon.hp || 100;
@@ -497,9 +467,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderCard(aiCard, aiPokemon, aiHP);
   renderCard(playerCard, playerPokemon, playerHP);
 
-  // =========================================================
-  // MOVES SYSTEM
-  // =========================================================
+  // Load moves from PokeAPI
   async function loadMoves(name) {
     try {
       const data = await fetch(
@@ -552,9 +520,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderMoveButtons(playerMoves);
 
-  // =========================================================
-  // BATTLE LOG
-  // =========================================================
+  // Add message to battle log
   function log(text, color = "") {
     const p = document.createElement("p");
     p.textContent = text;
@@ -570,9 +536,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (hpBar) hpBar.style.width = Math.max(0, (hp / (mon.hp || 100)) * 100) + "%";
   }
 
-  // =========================================================
-  // DAMAGE CALCULATION
-  // =========================================================
+  // Calculate type effectiveness multiplier
   function getTypeEffectiveness(attackType, defenderTypes) {
     let multiplier = 1;
     defenderTypes.forEach((defType) => {
@@ -606,9 +570,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return Math.max(5, damage);
   }
 
-  // =========================================================
-  // ATTACK FUNCTIONS
-  // =========================================================
+  // Player attack handler
   async function playerAttack(move) {
     if (!battleActive) return;
 
@@ -628,6 +590,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // AI attack handler
   async function aiAttack() {
     if (!battleActive) return;
 
@@ -650,9 +613,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // =========================================================
-  // FAINT HANDLERS
-  // =========================================================
+  // Handle AI Pokemon fainting
   async function handleAIFaint() {
     log(`🎉 ${aiPokemon.name} fainted!`, "#22c55e");
     aiIndex++;
@@ -680,6 +641,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // Handle player Pokemon fainting
   async function handlePlayerFaint() {
     log(`💀 ${playerPokemon.name} fainted!`, "#ef4444");
     playerIndex++;
@@ -710,9 +672,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // =========================================================
-  // BATTLE END HANDLER
-  // =========================================================
+  // Handle battle completion
   async function handleBattleEnd(playerWon) {
     battleActive = false;
 
@@ -731,8 +691,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 if (playerWon) {
   log("🏆 VICTORY! You won the battle!", "#22c55e");
   await levelUpTeam();
-  
-  // Log battle win transaction
+
   if (window.logBattleWin) {
     const aiTrainerName = session?.ai_name || "AI Trainer";
     await window.logBattleWin(
@@ -747,8 +706,7 @@ if (playerWon) {
     } else {
   log("💀 DEFEAT! Your team was defeated...", "#ef4444");
   await applyLossPenalties();
-  
-  // Log battle loss transaction
+
   if (window.logBattleLoss) {
     const aiTrainerName = session?.ai_name || "AI Trainer";
     await window.logBattleLoss(
@@ -765,9 +723,7 @@ if (playerWon) {
     showResultModal(playerWon);
   }
 
-  // =========================================================
-  // RESULT MODAL
-  // =========================================================
+  // Display battle result modal
   function showResultModal(victory) {
     if (victory) {
       resultModal.className = "battle-result-modal victory";
@@ -805,22 +761,18 @@ if (playerWon) {
     };
   }
 
-  // =========================================================
-  // CLAIM BUTTON HANDLER
-  // =========================================================
+  // Claim rewards button handler
   claimBtn.addEventListener("click", async () => {
     claimBtn.disabled = true;
 
     const isVictory = claimBtn.dataset.victory === "true";
     claimBtn.textContent = isVictory ? "Claiming..." : "Returning...";
 
-    // Show transaction modal for claiming
     showTxModal(
       isVictory ? "CLAIMING REWARDS" : "ENDING BATTLE",
       "Please confirm the transaction in MetaMask..."
     );
-    
-    // Update steps for claim process
+
     txStep1.querySelector(".tx-step-text").textContent = "Confirming transaction...";
     txStep2.querySelector(".tx-step-text").textContent = isVictory ? "Claiming PKCHP rewards..." : "Processing battle end...";
     txStep3.querySelector(".tx-step-text").textContent = isVictory ? "Finalizing rewards..." : "Returning to lobby...";
@@ -886,46 +838,39 @@ if (playerWon) {
       window.location.href = "home.html";
     });
   });
-  // =========================================================
-  // LEVEL UP SYSTEM - FIXED WITH PROPER EXP CALCULATION
-  // =========================================================
+
+  // Level up team after victory
   async function levelUpTeam() {
     const expReward = match.expReward || 100;
-    
+
     console.log("=== LEVEL UP TEAM ===");
     console.log("Player Team:", playerTeam);
     console.log("EXP Reward:", expReward);
-    
-    // Give EXP to ALL Pokemon that participated (up to playerIndex + 1)
+
     for (let i = 0; i <= Math.min(playerIndex, playerTeam.length - 1); i++) {
       const mon = playerTeam[i];
-      
+
       console.log(`Processing Pokemon ${i}:`, mon);
-      
+
       if (!mon) {
         console.log(`Pokemon ${i} is undefined, skipping`);
         continue;
       }
-      
-      // Get the database ID - could be 'id' or need to look it up
+
       const pokemonId = mon.id;
-      
+
       if (!pokemonId) {
         console.log(`Pokemon ${mon.name} has no ID, skipping`);
         continue;
       }
-      
+
       const currentLevel = mon.level || 1;
       const currentExp = mon.exp || 0;
-      // Convert stored level + in-level exp to cumulative exp before adding reward
       const cumulativeExp = getTotalExpToLevel(currentLevel) + currentExp;
       const newTotalExp = cumulativeExp + expReward;
-      
-      // Calculate new level based on total EXP
+
       const levelData = calculateLevelFromExp(newTotalExp);
-      // Never let a win reduce levels; clamp to at least currentLevel
       const newLevel = Math.max(currentLevel, levelData.level);
-      // Store exp as progress into the new level (not total cumulative exp)
       const expAtLevelStart = getTotalExpToLevel(newLevel);
       const storedExpForLevel = Math.max(0, newTotalExp - expAtLevelStart);
       const levelsGained = Math.max(0, newLevel - currentLevel);
@@ -942,7 +887,7 @@ if (playerWon) {
         updatePayload.defense = (mon.defense || 50) + statIncrease;
         updatePayload.speed = (mon.speed || 50) + statIncrease;
       }
-      
+
       console.log(`${mon.name}: Level ${currentLevel} -> ${newLevel}, EXP: ${currentExp} + ${expReward} = ${newTotalExp}`);
       
       try {
@@ -974,44 +919,40 @@ if (playerWon) {
     }
   }
 
-  // =========================================================
-  // LOSS PENALTIES
-  // =========================================================
+  // Apply penalties for losing a battle
   async function applyLossPenalties() {
     console.log("=== APPLY LOSS PENALTIES ===");
-    
+
     for (let i = 0; i <= Math.min(playerIndex, playerTeam.length - 1); i++) {
       const mon = playerTeam[i];
-      
+
       if (!mon) continue;
-      
+
       const pokemonId = mon.id;
       if (!pokemonId) continue;
-      
+
       const currentLevel = mon.level || 1;
 
       try {
         if (currentLevel <= 5) {
-          // Delete Pokemon if level 5 or below
           const { error } = await supabase
             .from("user_pokemon")
             .delete()
             .eq("id", pokemonId);
-            
+
           if (error) {
             console.error(`Failed to delete ${mon.name}:`, error);
           } else {
             log(`💔 ${mon.name} was lost forever...`, "#dc2626");
           }
         } else {
-          // Reduce level by 3
           const newLevel = Math.max(1, currentLevel - 3);
-          
+
           const { error } = await supabase
             .from("user_pokemon")
             .update({ level: newLevel })
             .eq("id", pokemonId);
-            
+
           if (error) {
             console.error(`Failed to update ${mon.name}:`, error);
           } else {
@@ -1024,9 +965,7 @@ if (playerWon) {
     }
   }
 
-  // =========================================================
-  // SESSION MANAGEMENT
-  // =========================================================
+  // Save current battle state to database
   async function saveSession() {
     try {
       await supabase
@@ -1055,9 +994,7 @@ if (playerWon) {
     localStorage.removeItem("PCA_PENDING_MATCH");
   }
 
-  // =========================================================
-  // AI TEAM GENERATION
-  // =========================================================
+  // Generate AI opponent team based on tier
   async function generateAITeam(tier, mode, playerTeam) {
     const teamSize = mode === "team" ? 3 : 1;
     const team = [];
@@ -1118,9 +1055,7 @@ if (playerWon) {
     }
   }
 
-  // =========================================================
-  // BATTLE INPUT HANDLING
-  // =========================================================
+  // Handle move button clicks
   moveContainer.addEventListener("click", async (e) => {
     const btn = e.target.closest(".move-btn");
     if (!btn || !battleActive) return;
@@ -1146,9 +1081,7 @@ if (playerWon) {
     return new Promise((res) => setTimeout(res, ms));
   }
 
-  // =========================================================
-  // START BATTLE
-  // =========================================================
+  // Start battle
   log("⚔️ Battle Start!", "#3b82f6");
   log(`${playerPokemon.name} vs ${aiPokemon.name}`, "#6b7280");
 });

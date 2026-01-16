@@ -1,4 +1,4 @@
-// P2P MARKET WITH EXP SYSTEM
+// P2P trading: player listings, purchases, and cancellations
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!window.supabase) {
@@ -192,7 +192,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="stat"><span>SPD</span> ${speed}</div>
       </div>
 
-      <!-- EXP BAR -->
       <div class="exp-container">
         <div class="exp-label">EXP: ${expData.current} / ${expData.needed}</div>
         <div class="exp-bar-container">
@@ -240,7 +239,7 @@ ${
     }
   }
 
-  // CANCEL LISTING
+  // Cancel-listing modal elements
   const messageModalBackdrop = document.getElementById(
     "p2pMessageModalBackdrop"
   );
@@ -313,14 +312,13 @@ ${
     }
 
     await loadListings();
-    // Log delist transaction
     if (window.logP2PDelist) {
       await window.logP2PDelist(listing);
     }
     openMessageModal("Your Pokemon is back to your Collection.");
   });
 
-  // BUY MODAL
+  // Buy modal elements
   const buyModalBackdrop = document.getElementById("p2pBuyModalBackdrop");
   const buyModalSprite = document.getElementById("p2pBuyModalSprite");
   const buyModalName = document.getElementById("p2pBuyModalName");
@@ -546,7 +544,6 @@ ${
 
         closeBuyModal();
         await loadListings();
-        // Log P2P buy transaction
         if (window.logP2PBuy) {
           await window.logP2PBuy(
             pendingListing,

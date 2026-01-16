@@ -1,8 +1,8 @@
-// GLOBAL CONSTANTS - Real-world time based rotation
-const REFRESH_INTERVAL = 120; // 2 minutes in seconds
-const FEATURED_INTERVAL = 300; // 5 minutes in seconds
+// Marketplace: timed rotations plus a featured Pokémon spotlight
 
-// Calculate current time slot based on real-world time
+const REFRESH_INTERVAL = 120; // 2 minutes
+const FEATURED_INTERVAL = 300; // 5 minutes
+
 function getCurrentMarketTimeSlot() {
   return Math.floor(Date.now() / 1000 / REFRESH_INTERVAL);
 }
@@ -11,7 +11,6 @@ function getCurrentFeaturedTimeSlot() {
   return Math.floor(Date.now() / 1000 / FEATURED_INTERVAL);
 }
 
-// Calculate seconds remaining until next rotation (real-world time)
 function getSecondsUntilNextMarketRotation() {
   const currentSeconds = Math.floor(Date.now() / 1000);
   return REFRESH_INTERVAL - (currentSeconds % REFRESH_INTERVAL);
@@ -29,43 +28,32 @@ const MARKET_LIMITS = {
   legendary: 4,
 };
 
-// Supabase globals – must be set in HTML:
-//   window.supabase
-//   window.CURRENT_USER_ID
 const CURRENT_USER_ID = window.CURRENT_USER_ID;
 
-// Treasury wallet (PKCHP goes here when buying)
+// Treasury wallet receiving PKCHP purchases
 window.GAME_TREASURY_ADDRESS =
   window.GAME_TREASURY_ADDRESS || "0x9170c20f9C6C83BDE7c5D20C1CB202610c30d445";
 
-// PKCHP CONTRACT CONFIG (SAFE, NON-BREAKING)
-
+// PKCHP token config (overridable via window)
 const PKCHP_CONFIG = {
-  // ERC-20 token contract address (PKCHP)
   address: window.PKCHP_ADDRESS || "",
-
-  // Your game treasury wallet (where PKCHP will go)
   treasury: window.GAME_TREASURY_ADDRESS || "",
-
-  // Token decimals (18 for standard ERC-20)
   decimals: 18,
 };
 
-// Minimal ABI we will ALWAYS use for PKCHP
 const BASE_PKCHP_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
   "function transfer(address to, uint256 amount) returns (bool)",
   "function decimals() view returns (uint8)",
 ];
 
-// REAL PKCHP BALANCE (MetaMask) READER
+// Load PKCHP balance from chain (null when unavailable)
 async function loadPkchpRealBalance() {
   try {
     if (!window.ethereum || !window.PKCHP_ADDRESS || !window.PKCHP_ABI) {
       return null;
     }
 
-    // Get wallet from localStorage (set by home.js) or from MetaMask
     let wallet = localStorage.getItem("CURRENT_WALLET_ADDRESS") || null;
 
     if (!wallet) {
@@ -87,16 +75,14 @@ async function loadPkchpRealBalance() {
     const rawBal = await contract.balanceOf(wallet);
     const decimals = await contract.decimals();
 
-    // Use ethers formatter; game uses WHOLE PokeChip units
     const floatBal = Number(ethers.formatUnits(rawBal, decimals));
-    return Math.floor(floatBal); // whole-number PokeChip
+    return Math.floor(floatBal);
   } catch (err) {
     console.warn("PKCHP on-chain load failed, fallback to Supabase:", err);
     return null;
   }
 }
 
-// Small helper to check if PKCHP on-chain payment is possible
 function canUsePkchpOnChain() {
   return (
     typeof window !== "undefined" &&
@@ -107,47 +93,39 @@ function canUsePkchpOnChain() {
   );
 }
 
-// Try to pay with PKCHP on-chain (NON-BLOCKING)
-// If anything fails, it will throw, but our caller handles it with try/catch
+// Transfer PKCHP tokens on-chain to the treasury
 async function payWithPkchpOnChain(costInPokechip) {
   if (!canUsePkchpOnChain()) {
     console.warn("PKCHP on-chain payment not configured. Skipping.");
     return;
   }
 
-  // Convert game "PokeChip" cost → PKCHP smallest unit (assuming 1:1 for now)
   const decimals = BigInt(PKCHP_CONFIG.decimals);
   const amount = BigInt(costInPokechip) * 10n ** decimals;
 
-  // ethers v6 style
   const provider = new ethers.BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
   const userAddress = await signer.getAddress();
 
   const pkchpAbi = window.PKCHP_ABI || [
-    // Minimal ERC-20 ABI: balanceOf + transfer
     "function balanceOf(address owner) view returns (uint256)",
     "function transfer(address to, uint256 amount) returns (bool)",
   ];
 
   const contract = new ethers.Contract(PKCHP_CONFIG.address, pkchpAbi, signer);
 
-  // Optional: check balance first
   const balance = await contract.balanceOf(userAddress);
   if (balance < amount) {
     throw new Error("Not enough PKCHP on-chain.");
   }
 
-  // Send PKCHP to treasury
   const tx = await contract.transfer(PKCHP_CONFIG.treasury, amount);
   console.log("PKCHP transfer tx sent:", tx.hash);
   await tx.wait();
   console.log("PKCHP transfer confirmed.");
 }
 
-// SUPABASE HELPERS
-
-// WALLET
+// DB fallback: get cached wallet balance
 async function getWalletBalance(userId) {
   const { data, error } = await supabase
     .from("user_wallet")
@@ -174,6 +152,7 @@ async function getWalletBalance(userId) {
   return data.pokechip_balance;
 }
 
+// Persist updated wallet balance
 async function updateWalletBalance(userId, newAmount) {
   const { error } = await supabase
     .from("user_wallet")
@@ -189,7 +168,7 @@ async function updateWalletBalance(userId, newAmount) {
   }
 }
 
-// COLLECTION 
+// Persist purchased Pokémon into the user's collection
 async function addPokemonToCollectionDB(entry) {
   const { error } = await supabase.from("user_pokemon").insert([
     {
@@ -211,7 +190,7 @@ async function addPokemonToCollectionDB(entry) {
   }
 }
 
-// MARKET POOL (per user) 
+// Utility: pick a set of random, non-repeating items
 function getRandomSubset(arr, count) {
   const pool = [...arr];
   const out = [];
@@ -222,14 +201,13 @@ function getRandomSubset(arr, count) {
   return out;
 }
 
+// Build a fresh market pool for this user
 async function createNewMarketPool(userId, timeSlot = null) {
-  // Get data from global window objects (loaded from Supabase)
   const commonPokemon = window.rarityData?.common || [];
   const rarePokemon = window.rarityData?.rare || [];
   const epicPokemon = window.rarityData?.epic || [];
   const legendaryPokemon = window.legendaryList || [];
 
-  // Use provided time slot or calculate current one
   const currentTimeSlot = timeSlot ?? getCurrentMarketTimeSlot();
 
   const pool = [
@@ -254,7 +232,6 @@ async function createNewMarketPool(userId, timeSlot = null) {
     })),
   ];
 
-  // Clear previous slots for this user
   const { error: deleteError } = await supabase
     .from("market_slots")
     .delete()
@@ -265,7 +242,6 @@ async function createNewMarketPool(userId, timeSlot = null) {
     throw deleteError;
   }
 
-  // Include time_slot in each row for tracking
   const rows = pool.map((p) => ({
     user_id: userId,
     pokemon_name: p.pokemon_name,
@@ -304,7 +280,6 @@ async function getMarketPool(userId) {
 
   if (!data || data.length === 0) return null;
 
-  // Get time slot from first row (all rows have same time slot)
   const storedTimeSlot = data[0]?.time_slot || 0;
 
   return {
@@ -316,9 +291,8 @@ async function getMarketPool(userId) {
   };
 }
 
-// ----- FEATURED Pricing -----
+// Choose a featured Pokémon candidate
 function pickRandomFeaturedFromClient() {
-  // Get data from global window objects (loaded from Supabase)
   const mythicalPokemon = window.rarityData?.mythical || [];
   const divinePokemon = window.rarityData?.divine || [];
 
@@ -336,15 +310,14 @@ function pickRandomFeaturedFromClient() {
   return {
     name: chosen.name,
     rarity: chosen.rarity,
-    price: pokechipPrice,     
+    price: pokechipPrice,
   };
 }
 
-
+// Fetch or seed the featured Pokémon record
 async function getFeaturedPokemonFromDB(userId) {
     const currentTimeSlot = getCurrentFeaturedTimeSlot();
 
-    // Get existing featured Pokémon for this user
     const { data: rows, error } = await supabase
         .from("featured_slots")
         .select("*")
@@ -358,9 +331,8 @@ async function getFeaturedPokemonFromDB(userId) {
 
     const existing = rows && rows.length > 0 ? rows[0] : null;
 
-    // Check if existing featured is still in the current time slot
     if (existing && existing.time_slot === currentTimeSlot) {
-        console.log("Using EXISTING featured — same time slot, price preserved");
+        console.log("Using existing featured - same time slot");
         return {
             name: existing.pokemon_name,
             rarity: existing.rarity,
@@ -369,10 +341,7 @@ async function getFeaturedPokemonFromDB(userId) {
         };
     }
 
-    // Time slot changed - create new featured Pokemon
     const picked = pickRandomFeaturedFromClient();
-
-    // Mythical to Divine Pricing (random per user)
     let price_pkchp = 0;
 
     if (picked.rarity === "Mythical") {
@@ -409,10 +378,6 @@ async function getFeaturedPokemonFromDB(userId) {
     };
 }
 
-
-
-
-// MAIN
 document.addEventListener("DOMContentLoaded", async () => {
   const grid = document.getElementById("pokemonGrid");
   const filterButtons = document.querySelectorAll(".market-filter-btn");
@@ -427,8 +392,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const featuredPriceValueEl = document.getElementById("featuredPriceValue");
   const featuredPriceLabelEl = document.getElementById("featuredPriceLabel");
 
-
-  // Timers calculated from real-world time
   let refreshTimer = getSecondsUntilNextMarketRotation();
   let featuredTimer = getSecondsUntilNextFeaturedRotation();
   let currentMarketTimeSlot = getCurrentMarketTimeSlot();
@@ -445,7 +408,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-// LOAD POKEMON DATA FROM SUPABASE
   const rarityData = await loadRarityData();
   const legendaryListData = await loadLegendaryList();
 
@@ -456,7 +418,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   console.log("Pokemon data loaded successfully from Supabase");
 
-// POKECHIP LOGIC (wallet: on-chain PKCHP first, Supabase fallback)
   const updateNavbarPokechip = () => {
     document.querySelectorAll(".pc-pokechip-amount").forEach((el) => {
       el.textContent = pokechipBalance;
@@ -464,13 +425,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   async function loadWallet() {
-    // 1) Try to use real PKCHP on-chain (MetaMask)
     const realPkchp = await loadPkchpRealBalance();
 
     if (realPkchp !== null) {
       pokechipBalance = realPkchp;
     } else {
-      // 2) Fallback → Supabase PokeChip
       pokechipBalance = await getWalletBalance(CURRENT_USER_ID);
     }
 
@@ -487,7 +446,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadWallet();
 
-// PRICE FORMULA FOR POKECHIP POKEMON Common - Legendary
+  // Price calculation based on stats and rarity
   function computePrice(p, rarity) {
     const total = p.hp + p.attack + p.defense + p.speed;
     
@@ -503,20 +462,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     return Math.min(Math.max(15 + Math.floor(total / 80), 15), 25);
   }
 
-// FEATURED
+  // Render featured Pokémon display
   async function renderFeatured() {
     const p = await fetchPokemon(featuredPokemon.name);
 
-    // UI Display
     featuredSpriteEl.src = p.sprite;
     featuredNameEl.textContent = p.name;
     featuredRarityEl.textContent = featuredPokemon.rarity;
 
-    // USE ONLY THE PRICE FROM DATABASE
     featuredPriceValueEl.textContent = featuredPokemon.price_pkchp;
     featuredBuyBtn.textContent = `Buy for ${featuredPokemon.price_pkchp} PKCHP`;
 
-    // Stats for modal
     featuredPokemon.stats = {
         id: p.id,
         sprite: p.sprite,
@@ -532,13 +488,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function initFeatured() {
     featuredPokemon = await getFeaturedPokemonFromDB(CURRENT_USER_ID);
     await renderFeatured();
-    // Timer is calculated from real-world time, no need for endAt
     featuredTimer = getSecondsUntilNextFeaturedRotation();
   }
 
   await initFeatured();
 
-// MARKET RENDER
+  // Render market grid
   async function renderMarket(filter = "all") {
     grid.innerHTML = "";
 
@@ -600,7 +555,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // BUY MODAL (WORKS FOR FEATURED and NORMAL)
+  // Buy modal elements
   const buyModalBackdrop = document.getElementById("buyModalBackdrop");
   const buyModalSprite = document.getElementById("buyModalSprite");
   const buyModalName = document.getElementById("buyModalName");
@@ -626,7 +581,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   async function openBuyModal(data) {
-    // Refresh on-chain PKCHP before showing modal
     const realPkchp = await loadPkchpRealBalance();
     if (realPkchp !== null) {
       pokechipBalance = realPkchp;
@@ -648,7 +602,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function closeBuyModal() {
-    if (isProcessingPurchase) return; // keep modal open while processing
+    if (isProcessingPurchase) return;
     buyModalBackdrop.classList.add("d-none");
     pendingPurchase = null;
   }
@@ -695,7 +649,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const cost = pendingPurchase.price;
 
-    // Check balance (galing sa MetaMask or Supabase, depende sa loadWallet)
     if (pokechipBalance < cost) {
       alert("Not enough PokeChip!");
       return;
@@ -706,14 +659,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Keep this tab open. We'll send you to your Collection when done."
     );
 
-    // 1. On-chain PKCHP transfer muna
     try {
       await payWithPkchpOnChain(cost);
     } catch (err) {
       console.error("PKCHP on-chain payment failed:", err);
       hideProcessingModal();
       alert("On-chain PKCHP transfer failed.");
-      return; 
+      return;
     }
 
     updateProcessingText(
@@ -721,16 +673,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Please wait, this keeps the purchase from getting lost."
     );
 
-    // 2. Update local and Supabase mirror ng wallet
     try {
       pokechipBalance -= cost;
       await savePokechip();
       updateNavbarPokechip();
 
-      // 3. I-save yung nabili sa user_pokemon
       await addPokemonToCollectionDB(pendingPurchase);
 
-      // 4. Log transaction
       if (window.logMarketBuy) {
         await window.logMarketBuy(pendingPurchase, cost);
       }
@@ -747,7 +696,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // BUY BUTTON HANDLER (MARKET)
+  // Market buy button handler
   grid.addEventListener("click", (e) => {
     const btn = e.target.closest(".buy-btn");
     if (!btn) return;
@@ -767,7 +716,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-// FEATURED BUY BUTTON 
+  // Featured buy button handler
   featuredBuyBtn.addEventListener("click", () => {
   if (!featuredPokemon || !featuredPokemon.stats) return;
 
@@ -782,12 +731,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     attack: featuredPokemon.stats.attack,
     defense: featuredPokemon.stats.defense,
     speed: featuredPokemon.stats.speed,
-    currency: "PokeChip", 
+    currency: "PokeChip",
   });
 });
 
-
-// FILTER BUTTONS
+  // Filter button handlers
   filterButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       filterButtons.forEach((b) => b.classList.remove("active"));
@@ -796,9 +744,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-// MARKET TIMER - Real-world time based (no localStorage needed)
+  // Market refresh timer
   setInterval(async () => {
-    // Recalculate from real-world time every tick
     refreshTimer = getSecondsUntilNextMarketRotation();
     const newTimeSlot = getCurrentMarketTimeSlot();
 
@@ -806,7 +753,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const s = String(refreshTimer % 60).padStart(2, "0");
     refreshTimerEl.textContent = `Next refresh in ${m}:${s}`;
 
-    // Check if time slot changed (new rotation period)
     if (newTimeSlot !== currentMarketTimeSlot) {
       currentMarketTimeSlot = newTimeSlot;
 
@@ -821,9 +767,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }, 1000);
 
-// FEATURED TIMER - Real-world time based
+  // Featured refresh timer
   setInterval(async () => {
-    // Recalculate from real-world time every tick
     featuredTimer = getSecondsUntilNextFeaturedRotation();
     const newFeaturedTimeSlot = getCurrentFeaturedTimeSlot();
 
@@ -832,7 +777,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     featuredTimerEl.textContent = `${m}:${s}`;
 
-    // Check if time slot changed (new rotation period)
     if (newFeaturedTimeSlot !== currentFeaturedTimeSlot) {
       currentFeaturedTimeSlot = newFeaturedTimeSlot;
       featuredPokemon = await getFeaturedPokemonFromDB(CURRENT_USER_ID);
@@ -840,20 +784,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }, 1000);
 
-// INITIAL MARKET LOAD - Check if time slot has changed
+  // Load initial market pool
   const savedData = await getMarketPool(CURRENT_USER_ID);
 
   if (!savedData || savedData.pool.length === 0) {
-    // No saved pool, create new one
     const result = await createNewMarketPool(CURRENT_USER_ID, currentMarketTimeSlot);
     currentMarketPool = result.pool;
   } else if (savedData.timeSlot !== currentMarketTimeSlot) {
-    // Time slot changed while offline - regenerate pool
     console.log(`Market time slot changed: ${savedData.timeSlot} → ${currentMarketTimeSlot}`);
     const result = await createNewMarketPool(CURRENT_USER_ID, currentMarketTimeSlot);
     currentMarketPool = result.pool;
   } else {
-    // Same time slot, use saved pool
     currentMarketPool = savedData.pool;
   }
 

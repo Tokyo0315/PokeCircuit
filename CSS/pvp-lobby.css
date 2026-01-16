@@ -1,6 +1,6 @@
 /* ============================================================
    POKECIRCUIT ARENA - PVP LOBBY STYLES
-   Epic battle arena lobby with neon effects
+   Lobby layout for hosting and joining escrowed matches
 =============================================================== */
 
 /* ============================================================
@@ -18,7 +18,7 @@
     overflow: hidden;
 }
 
-/* Animated background particles */
+/* Animated background sparkles */
 .pvp-lobby-container::before {
     content: '';
     position: absolute;
@@ -48,7 +48,7 @@
 }
 
 /* ============================================================
-   HERO SECTION
+   HERO SECTION (title, subtitle, warnings)
 =============================================================== */
 
 .pvp-hero {
@@ -190,7 +190,7 @@
 }
 
 /* ============================================================
-   ACTION CARDS SECTION
+   ACTION CARDS SECTION (host vs join)
 =============================================================== */
 
 .pvp-actions {

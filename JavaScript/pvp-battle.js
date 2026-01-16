@@ -1,9 +1,4 @@
-// ============================================================
-// POKECIRCUIT ARENA - PVP BATTLE SYSTEM
-// Fixed: PKCHP transfer on win/loss + proper sprite saving
-// ============================================================
-
-document.addEventListener("DOMContentLoaded", async () => {
+﻿document.addEventListener("DOMContentLoaded", async () => {
   if (!window.supabase) {
     console.error("? Supabase not loaded");
     return;
@@ -27,16 +22,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Contract addresses
+  // Contract addresses (use defaults if env vars missing)
   const PKCHP_ADDRESS =
     window.PKCHP_ADDRESS || "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
   const BATTLE_REWARDS_ADDRESS =
     window.BATTLE_REWARDS_ADDRESS ||
     "0x80617C5F2069eF97792F77e1F28A4aD410B80578";
 
-  // ============================================================
-  // DOM ELEMENTS
-  // ============================================================
+  // DOM references for the battle UI
 
   const pvpRoomCode = document.getElementById("pvpRoomCode");
   const battleLog = document.getElementById("battleLog");
@@ -81,9 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const rewardNoticeMessage = document.getElementById("rewardNoticeMessage");
   const rewardNoticeOk = document.getElementById("rewardNoticeOk");
 
-  // ============================================================
-  // STATE
-  // ============================================================
+  // Client-side battle state
 
   let room = null;
   let myPokemon = null;
@@ -106,9 +97,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let lastMyPokemonId = null;
   let lastOpponentPokemonId = null;
 
-  // ============================================================
-  // HELPER: Shorten wallet address
-  // ============================================================
+ // Name/wallet formatting helpers
 
   function shortenWallet(wallet) {
     if (!wallet) return "Unknown";
@@ -135,9 +124,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return team.length ? team[0] : null;
   }
 
-  // ============================================================
   // EXP/LEVEL HELPERS (keep PVP leveling aligned with PVE logic)
-  // ============================================================
 
   function getExpForLevel(level) {
     return level * 100;
@@ -200,9 +187,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // PKCHP TRANSFER FUNCTIONS
-  // ============================================================
+  // PKCHP reward + payout helpers
 
   async function transferPKCHP(toAddress, amount) {
     if (!window.ethereum) {
@@ -281,9 +266,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
   // INITIALIZE
-  // ============================================================
 
   async function init() {
     const { data: roomData, error } = await supabase
@@ -370,9 +353,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("? PVP Battle initialized");
   }
 
-  // ============================================================
-  // RENDER BATTLE UI
-  // ============================================================
+ // RENDER BATTLE UI
 
   function renderBattleUI() {
     playerPokemonSprite.src = myPokemon.sprite;
@@ -399,9 +380,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
   }
 
-  // ============================================================
-  // LOAD MOVES
-  // ============================================================
+ // LOAD MOVES
 
   async function loadMoves() {
     try {
@@ -448,9 +427,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ============================================================
   // EXECUTE MOVE
-  // ============================================================
 
   async function executeMove(move, index) {
     if (!isMyTurn || !battleActive) return;
@@ -570,9 +547,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
   // SUBSCRIBE TO ROOM UPDATES
-  // ============================================================
 
   function subscribeToRoom() {
     roomSubscription = supabase
@@ -700,9 +675,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 300);
   }
 
-  // ============================================================
+
   // TURN MANAGEMENT
-  // ============================================================
 
   function updateTurnUI() {
     if (!battleActive) return;
@@ -754,9 +728,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
   // BATTLE END HANDLERS
-  // ============================================================
 
   async function handleVictory() {
     battleActive = false;
@@ -809,9 +781,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     opponentLeftModal.classList.add("show");
   }
 
-  // ============================================================
-  // CLAIM VICTORY - WITH ACTUAL PKCHP TRANSFER
-  // ============================================================
+  // CLAIM VICTORY — XP + token payout
 
   claimVictoryBtn.addEventListener("click", async () => {
     claimVictoryBtn.disabled = true;
@@ -854,9 +824,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           err
         );
       }
-
-      // If rewards contract fails, the loser should have already transferred
-      // For now, we'll log success regardless (the bet was already placed)
 
       // Step 4: Log transaction with sprite URL
       txMessage.textContent = "Recording transaction...";
@@ -932,9 +899,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // ============================================================
-  // RETURN AFTER DEFEAT - TRANSFER PKCHP TO WINNER
-  // ============================================================
+
+  // RETURN AFTER DEFEAT — pay the winner
 
   returnBtn.addEventListener("click", async () => {
     returnBtn.disabled = true;
@@ -992,9 +958,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // ============================================================
-  // CLAIM FORFEIT - OPPONENT DISCONNECTED
-  // ============================================================
+  // CLAIM FORFEIT — opponent left mid-match
 
   claimForfeitBtn.addEventListener("click", async () => {
     claimForfeitBtn.disabled = true;
@@ -1043,9 +1007,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // ============================================================
   // UTILITY
-  // ============================================================
 
   function log(message, color = "#fff") {
     const p = document.createElement("p");

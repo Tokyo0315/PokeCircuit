@@ -1,6 +1,4 @@
-// =========================================================
-// MATCH SETUP — UPDATED WITH LOSS PENALTY WARNINGS
-// =========================================================
+﻿// MATCH SETUP — UPDATED WITH LOSS PENALTY WARNINGS
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!window.supabase) {
@@ -12,9 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ======================================================
   // DOM ELEMENTS
-  // ======================================================
   const modeBtns = document.querySelectorAll("[data-battle-mode]");
   const tierBtns = document.querySelectorAll("[data-battle-tier]");
 
@@ -31,9 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const startBtn = document.getElementById("startMatchBtn");
 
-  // ======================================================
   // STATE
-  // ======================================================
   let mode = null;
   let tier = null;
   let balance = 0;
@@ -41,9 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let selectable = [];
   let selected = new Set();
 
-  // ======================================================
   // CONFIG
-  // ======================================================
   const ENTRY_FEES = {
     single: { low: 10, mid: 25, high: 50 },
     team: { low: 25, mid: 60, high: 120 },
@@ -59,9 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     team: { low: 140, mid: 240, high: 360 },
   };
 
-  // ======================================================
   // UTILITY HELPERS
-  // ======================================================
 
   function maxTeam() {
     return mode === "team" ? 3 : 1;
@@ -139,9 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       : `Select ${needed} Pokemon`;
   }
 
-  // ======================================================
   // LOAD BALANCE
-  // ======================================================
   async function loadBalance() {
     try {
       const wallet = window.CURRENT_WALLET_ADDRESS;
@@ -166,9 +154,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .forEach((el) => (el.textContent = balance));
   }
 
-  // ======================================================
   // LOAD COLLECTION FROM DB
-  // ======================================================
   async function loadCollection() {
     const { data, error } = await supabase
       .from("user_pokemon")
@@ -180,9 +166,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // IMPORTANT: Keep id as original UUID, don't convert to string!
+    // Keep id as original UUID, don't convert to string!
     collection = data.map((p) => ({
-      id: p.id, // Keep as UUID - DO NOT use .toString()
+      id: p.id,
       pokemon_id: p.pokemon_id,
       name: p.pokemon_name,
       rarity: p.rarity,
@@ -198,9 +184,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Loaded collection:", collection);
   }
 
-  // ======================================================
   // RENDER POKÉMON CARDS
-  // ======================================================
   async function renderCards() {
     grid.innerHTML = "";
 
@@ -290,9 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateSummaryUI();
   }
 
-  // ======================================================
   // EVENT: SELECTING POKÉMON
-  // ======================================================
   grid.addEventListener("click", (e) => {
     const btn = e.target.closest(".select-btn");
     if (!btn) return;
@@ -314,9 +296,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderCards();
   });
 
-  // ======================================================
   // EVENT: SELECT MODE
-  // ======================================================
   modeBtns.forEach((btn) =>
     btn.addEventListener("click", () => {
       modeBtns.forEach((b) => b.classList.remove("active"));
@@ -332,9 +312,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     })
   );
 
-  // ======================================================
   // EVENT: SELECT TIER
-  // ======================================================
   tierBtns.forEach((btn) =>
     btn.addEventListener("click", () => {
       tierBtns.forEach((b) => b.classList.remove("active"));
@@ -349,9 +327,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     })
   );
 
-  // ======================================================
   // EVENT: START MATCH
-  // ======================================================
   startBtn.addEventListener("click", () => {
     if (selected.size !== maxTeam())
       return alert(`Select ${maxTeam()} Pokemon.`);
@@ -389,9 +365,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "battle.html";
   });
 
-  // ======================================================
   // INITIAL LOAD
-  // ======================================================
   await loadBalance();
   await loadCollection();
   updateSummaryUI();

@@ -1,8 +1,3 @@
-/* ============================================================
-   BATTLE PAGE — FIXED LAYOUT (NO STRETCHING)
-   Deep blues + gold trim + soft glows
-=============================================================== */
-
 .battle-wrapper {
     display: grid;
     grid-template-columns: 300px 1fr 300px;
@@ -17,9 +12,7 @@
     /* CRITICAL: Prevents page stretch */
 }
 
-/* ============================================================
-   LEFT PANEL — BATTLE LOG (FIXED HEIGHT)
-=============================================================== */
+/* LEFT PANEL — BATTLE LOG */
 
 .battle-log-panel {
     background: #11141c;
@@ -30,11 +23,8 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    /* Fill grid cell */
     max-height: 100%;
-    /* Don't exceed grid cell */
     overflow: hidden;
-    /* Prevent overflow */
 }
 
 .battle-log-title {
@@ -44,19 +34,16 @@
     text-shadow: 0 0 4px rgba(255, 220, 120, 0.7);
     margin-bottom: 10px;
     flex-shrink: 0;
-    /* Don't shrink title */
 }
 
 #battleLog {
     flex-grow: 1;
     overflow-y: auto;
-    /* Scroll when content overflows */
     background: #0d1017;
     border-radius: 10px;
     border: 1px solid rgba(255, 216, 110, 0.35);
     padding: 10px;
     max-height: 100%;
-    /* Critical fix */
 }
 
 /* Custom scrollbar for battle log */
@@ -88,9 +75,7 @@
     line-height: 1.4;
 }
 
-/* ============================================================
-   CENTER ARENA — FIXED ASPECT RATIO
-=============================================================== */
+/* CENTER ARENA — FIXED ASPECT RATIO */
 
 .battlefield {
     position: relative;
@@ -99,9 +84,7 @@
     border: 3px solid #d4af37;
     box-shadow: 0 0 30px rgba(255, 215, 100, 0.35);
     height: 100%;
-    /* Fill grid cell */
     max-height: 100%;
-    /* Don't exceed */
 }
 
 .battle-bg {
@@ -113,9 +96,7 @@
     left: 0;
 }
 
-/* ============================================================
-   SPRITE POSITIONS (FIXED TO VIEWPORT)
-=============================================================== */
+/* SPRITE POSITIONS (FIXED TO VIEWPORT) */
 
 .pokemon-ai {
     position: absolute;
@@ -166,9 +147,7 @@
     }
 }
 
-/* ============================================================
-   STATUS CARDS (HP + NAME) — FIXED POSITION
-=============================================================== */
+/* STATUS CARDS (HP + NAME) — FIXED POSITION */
 
 .battle-card {
     position: absolute;
@@ -240,9 +219,7 @@
     box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
 }
 
-/* ============================================================
-   RIGHT PANEL — MOVES (FIXED HEIGHT)
-=============================================================== */
+/* RIGHT PANEL — MOVES */
 
 .moves-panel {
     background: #11141c;
@@ -270,7 +247,6 @@
     flex-direction: column;
     gap: 12px;
     overflow-y: auto;
-    /* Scroll if too many moves */
 }
 
 .move-btn {
@@ -299,9 +275,7 @@
     border-color: #666;
 }
 
-/* ============================================================
-   DAMAGE / HIT EFFECTS
-=============================================================== */
+/* DAMAGE / HIT EFFECTS */
 
 .damage-flash {
     animation: damageFlash 0.35s ease-out;
@@ -349,9 +323,7 @@
     }
 }
 
-/* ============================================================
-   RESPONSIVE
-=============================================================== */
+/* RESPONSIVE */
 
 @media (max-width: 1200px) {
     .battle-wrapper {
@@ -427,9 +399,7 @@
     }
 }
 
-/* ============================================================
-   UTILITY CLASSES
-=============================================================== */
+/* UTILITY CLASSES */
 
 .d-none {
     display: none !important;
@@ -452,9 +422,7 @@
     animation: battleStart 0.5s ease-out;
 }
 
-/* ============================================================
-   VICTORY/DEFEAT MODAL
-=============================================================== */
+/* VICTORY/DEFEAT MODAL */
 
 .battle-result-modal {
     position: fixed;
@@ -650,9 +618,7 @@
     transform: none !important;
 }
 
-/* ============================================================
-   NOTICE MODAL
-=============================================================== */
+/* NOTICE MODAL */
 
 .battle-notice-modal {
     position: fixed;
@@ -719,9 +685,7 @@
     cursor: not-allowed;
 }
 
-/* ============================================================
-   TRANSACTION LOADING MODAL
-=============================================================== */
+/* TRANSACTION LOADING MODAL */
 
 .tx-loading-modal {
     position: fixed;

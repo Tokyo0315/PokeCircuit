@@ -1,4 +1,4 @@
-﻿// COLLECTION PAGE WITH EXP SYSTEM
+// Collection Page - View and manage owned Pokemon
 
 document.addEventListener("DOMContentLoaded", async () => {
   const grid = document.getElementById("collectionGrid");
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let collection = [];
   let pokechipBalance = 0;
 
-  // EXP needed for each level (simple formula: level * 100)
+  // EXP needed for each level = level * 100
   function getExpForLevel(level) {
     return level * 100;
   }
@@ -176,7 +176,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="stat"><span>SPD</span> ${entry.speed}</div>
       </div>
 
-      <!-- EXP BAR -->
       <div class="exp-container">
         <div class="exp-label">EXP: ${expData.current} / ${expData.needed}</div>
         <div class="exp-bar-container">
@@ -239,7 +238,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await refreshAll();
 
-  // SELL MODAL
+  // Sell modal elements
   const sellModalBackdrop = document.getElementById("sellModalBackdrop");
   const sellModalSprite = document.getElementById("sellModalSprite");
   const sellModalName = document.getElementById("sellModalName");
@@ -366,7 +365,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Almost done."
     );
 
-    // Log P2P list transaction
     if (window.logP2PList) {
       await window.logP2PList(selectedPokemonForSale, price);
     }

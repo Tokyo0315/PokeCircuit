@@ -48,7 +48,7 @@ body {
     max-width: 75rem;
 }
 
-/* HERO / LEFT SIDE */
+/* HERO - LEFT SIDE */
 
 .game-title {
     font-family: 'Press Start 2P', cursive;
@@ -142,7 +142,6 @@ body {
     opacity: 1;
 }
 
-/* Connected (optional toggle class) */
 
 .btn-dark#connectWalletBtn,
 .btn-dark#registerBtn {

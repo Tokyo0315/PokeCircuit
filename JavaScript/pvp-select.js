@@ -1,6 +1,6 @@
 // ============================================================
-// POKECIRCUIT ARENA - PVP POKEMON SELECTION
-// Fixed: Wallet address truncation for display
+// POKECIRCUIT ARENA — PVP Pokémon selection lobby
+// Manages roster locks, readiness, and countdown to battle
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ============================================================
-  // DOM ELEMENTS
+  // DOM references for the selection UI
   // ============================================================
 
   const roomCodeDisplay = document.getElementById("roomCodeDisplay");
@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const txStep3 = document.getElementById("txStep3");
 
   // ============================================================
-  // STATE
+  // Selection state
   // ============================================================
 
   let room = null;
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let timeLeft = 60;
 
   // ============================================================
-  // HELPER FUNCTIONS
+  // Helper functions for display + selection rules
   // ============================================================
 
   function shortenWallet(wallet) {

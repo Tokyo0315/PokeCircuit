@@ -1,8 +1,4 @@
-// ============================================================
-// POKECIRCUIT ARENA - PVP LOBBY SYSTEM
-// With Escrow-based Pre-paid Betting
-// Both players deposit PKCHP upfront, winner gets both
-// ============================================================
+﻿// PVP Lobby: room creation, matchmaking, and escrow-backed betting
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!window.supabase) {
@@ -19,13 +15,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Contract addresses
+  // Contract addresses (fall back to defaults when env vars are missing)
   const PKCHP_ADDRESS =
     window.PKCHP_ADDRESS || "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
   const PVP_ESCROW_ADDRESS =
-    window.PVP_ESCROW_ADDRESS || "0xd9145CCE52D386f254917e481eB44e9943F39138"; // TODO: Add after deployment
+    window.PVP_ESCROW_ADDRESS || "0xd9145CCE52D386f254917e481eB44e9943F39138";
 
-  // Contract ABIs
   const PKCHP_ABI = [
     {
       inputs: [
@@ -106,10 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     },
   ];
 
-  // ============================================================
-  // DOM ELEMENTS
-  // ============================================================
-
+  // UI references used across the lobby flow
   const createBetOptions = document.getElementById("createBetOptions");
   const createRoomBtn = document.getElementById("createRoomBtn");
   const battleModeOptions = document.getElementById("battleModeOptions");
@@ -139,10 +131,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const errorMessage = document.getElementById("errorMessage");
   const errorOkBtn = document.getElementById("errorOkBtn");
 
-  // ============================================================
-  // STATE
-  // ============================================================
-
+  // Lobby state
   let selectedBet = null;
   let selectedMode = "single";
   let currentRoomId = null;
@@ -151,10 +140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let pendingRoom = null;
   let pkchpBalance = 0;
 
-  // ============================================================
-  // UTILITY FUNCTIONS
-  // ============================================================
-
+  // Shared helpers for UI and data formatting
   function generateRoomCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
@@ -231,9 +217,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return shortenWallet(wallet);
   }
 
-  // ============================================================
-  // LOAD BALANCE
-  // ============================================================
+  // Balance loading with collection gating
 
   async function loadBalance() {
     try {
@@ -266,9 +250,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ============================================================
-  // APPROVE PKCHP FOR ESCROW CONTRACT
-  // ============================================================
+  // Balance + approval helpers 
   async function loadBalance() {
     try {
       const wallet = CURRENT_WALLET;
@@ -345,9 +327,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // DEPOSIT TO ESCROW (CREATE ROOM)
-  // ============================================================
+// Host deposit flow (room creation)
 
   async function depositToEscrow(roomCode, amount) {
     if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
@@ -374,9 +354,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // JOIN ESCROW ROOM
-  // ============================================================
+  // Guest escrow join
 
   async function joinEscrowRoom(roomCode) {
     if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
@@ -403,9 +381,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // CANCEL ESCROW ROOM (REFUND)
-  // ============================================================
+  // Escrow cancellation and refund
 
   async function cancelEscrowRoom(roomCode) {
     if (!window.ethereum || !PVP_ESCROW_ADDRESS) return true;
@@ -429,9 +405,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // BET SELECTION
-  // ============================================================
+  // Host bet selection UI
 
   createBetOptions.addEventListener("click", (e) => {
     const btn = e.target.closest(".bet-btn");
@@ -446,9 +420,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     createRoomBtn.disabled = false;
   });
 
-  // ============================================================
-  // BATTLE MODE SELECTION
-  // ============================================================
+  // Battle mode selector
 
   battleModeOptions.addEventListener("click", (e) => {
     const btn = e.target.closest(".mode-btn");
@@ -462,18 +434,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     selectedMode = btn.dataset.battleMode || "single";
   });
 
-  // ============================================================
-  // ROOM CODE INPUT
-  // ============================================================
+  // Join code handling
 
   roomCodeInput.addEventListener("input", (e) => {
     e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     joinRoomBtn.disabled = e.target.value.length !== 5;
   });
 
-  // ============================================================
-  // CREATE ROOM - WITH ESCROW DEPOSIT
-  // ============================================================
+  // Create room: approve, deposit, then persist
 
   createRoomBtn.addEventListener("click", async () => {
     if (!selectedBet) {
@@ -628,9 +596,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       '<span class="btn-icon">⚡</span> CREATE BATTLE ROOM';
   });
 
-  // ============================================================
-  // SUBSCRIBE TO ROOM UPDATES
-  // ============================================================
+  // Live updates for host while waiting
 
   function subscribeToRoom(roomId) {
     if (roomSubscription) {
@@ -678,9 +644,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // COPY ROOM CODE
-  // ============================================================
+  // Clipboard helpers
 
   copyCodeBtn.addEventListener("click", async () => {
     try {
@@ -703,9 +667,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // ============================================================
-  // CANCEL ROOM - WITH ESCROW REFUND
-  // ============================================================
+  // Host cancel flow (refund + DB update)
 
   cancelRoomBtn.addEventListener("click", async () => {
     if (!currentRoomId) return;
@@ -742,9 +704,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     cancelRoomBtn.textContent = "❌ CANCEL ROOM";
   });
 
-  // ============================================================
-  // JOIN ROOM
-  // ============================================================
+  // Guest join flow: validate and stage confirmation
 
   joinRoomBtn.addEventListener("click", async () => {
     const code = roomCodeInput.value.toUpperCase().trim();
@@ -821,9 +781,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     joinRoomBtn.disabled = false;
   });
 
-  // ============================================================
-  // CONFIRM/DECLINE JOIN
-  // ============================================================
+  // Guest confirmation modal
 
   declineJoinBtn.addEventListener("click", () => {
     hideModal(confirmJoinModal);
@@ -832,9 +790,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     joinRoomBtn.disabled = true;
   });
 
-  // ============================================================
-  // ACCEPT JOIN - WITH ESCROW DEPOSIT
-  // ============================================================
+  // Guest acceptance: approve, deposit, then commit
 
   acceptJoinBtn.addEventListener("click", async () => {
     if (!pendingRoom) return;
@@ -916,17 +872,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     acceptJoinBtn.textContent = "⚔️ ACCEPT & DEPOSIT";
   });
 
-  // ============================================================
-  // ERROR MODAL OK
-  // ============================================================
+  // Error modal dismissal
 
   errorOkBtn.addEventListener("click", () => {
     hideModal(errorModal);
   });
 
-  // ============================================================
-  // CLEANUP
-  // ============================================================
+  // Cleanup
 
   function cleanupSubscription() {
     if (roomSubscription) {
@@ -939,9 +891,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     cleanupSubscription();
   });
 
-  // ============================================================
-  // INITIALIZE
-  // ============================================================
+  // Bootstrap
 
   await loadBalance();
   console.log("✓ PVP Lobby loaded with Escrow support");

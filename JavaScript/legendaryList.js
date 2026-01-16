@@ -1,5 +1,4 @@
 // Legendary Pokemon List - Fetched from Supabase
-// This replaces the hardcoded array with database queries
 
 let legendaryList = [];
 let legendaryDataLoaded = false;

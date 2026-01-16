@@ -1,9 +1,4 @@
-/* ============================================================
-   POKECIRCUIT ARENA - PVP BATTLE STYLES
-   Additional styles for PVP battles
-=============================================================== */
-
-/* PVP Indicator */
+/* PVP Indicator (floating badge + room code) */
 .pvp-indicator {
     position: fixed;
     top: 100px;
@@ -59,7 +54,7 @@
     letter-spacing: 2px;
 }
 
-/* Turn Indicator */
+/* Turn Indicator overlay */
 .turn-indicator {
     position: absolute;
     top: 50%;
@@ -118,7 +113,7 @@
     color: #ef4444;
 }
 
-/* Turn Timer */
+/* Turn Timer (circular countdown) */
 .turn-timer {
     position: absolute;
     top: 20px;
@@ -194,9 +189,7 @@
     font-size: 0.9rem;
 }
 
-/* ============================================================
-   RESULT MODALS
-=============================================================== */
+/* RESULT MODALS */
 
 .pvp-result-modal {
     position: fixed;
@@ -592,9 +585,7 @@
     border: 3px solid #1a1a1a;
 }
 
-/* ============================================================
-   RESPONSIVE
-=============================================================== */
+/* RESPONSIVE */
 
 @media (max-width: 768px) {
     .pvp-indicator {

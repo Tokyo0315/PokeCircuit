@@ -1,12 +1,9 @@
-// ======================================================
-//  GLOBAL STORAGE KEYS
-// ======================================================
+// Home page shell: wallet display, navigation, and session management
+
 const CURRENT_USER_ID_KEY = "CURRENT_USER_ID";
 const CURRENT_WALLET_ADDRESS_KEY = "CURRENT_WALLET_ADDRESS";
 
-// ======================================================
-//  PKCHP SMART CONTRACT CONFIG
-// ======================================================
+// PKCHP contract config for balance display
 const PKCHP_ADDRESS = "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
 
 const PKCHP_ABI = [
@@ -26,9 +23,7 @@ const PKCHP_ABI = [
   },
 ];
 
-// ======================================================
-//  FORCE WALLET DETECTION
-// ======================================================
+// Detect and store the connected wallet address
 async function detectAndStoreWalletAddress() {
   if (!window.ethereum) return null;
 
@@ -49,9 +44,6 @@ async function detectAndStoreWalletAddress() {
   }
 }
 
-// ======================================================
-//  MAIN INITIALIZER
-// ======================================================
 document.addEventListener("DOMContentLoaded", async () => {
   const walletChip = document.querySelector(".pc-wallet-chip");
   const ethDisplay = document.querySelector(".pc-eth-balance");
@@ -254,18 +246,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ======================================================
-  // MOBILE NAV
-  // ======================================================
+  // Mobile navigation toggle
   if (navToggle && navMenu) {
     navToggle.addEventListener("click", () => {
       navMenu.classList.toggle("active");
     });
   }
 
-  // ======================================================
-  // LOGOUT HANDLER
-  // ======================================================
+  // Logout button handler
   if (logoutButtons && logoutButtons.length) {
     logoutButtons.forEach((btn) =>
       btn.addEventListener("click", () => {
@@ -277,9 +265,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
-  // ======================================================
-  // PKCHP — ON-CHAIN READ
-  // ======================================================
+  // Load PKCHP token balance from blockchain
   async function loadPKCHP(wallet) {
     if (!window.ethereum) return 0;
 
@@ -312,9 +298,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.addEventListener("focus", updatePKCHP);
 
-  // ======================================================
-  // SUPABASE USER HANDLING
-  // ======================================================
+  // Get or create user in database
   async function ensureUser(wallet) {
     const lower = wallet.toLowerCase();
 
@@ -335,7 +319,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return inserted;
   }
 
-  // FIXED: user_wallet table only has user_id, created_at, updated_at
+  // Get or create user wallet record
   async function ensureWalletTable(userId) {
     let { data } = await supabase
       .from("user_wallet")
@@ -345,7 +329,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (data) return data;
 
-    // Only insert user_id - no pokechip_balance column exists
     const { data: inserted, error } = await supabase
       .from("user_wallet")
       .insert([{ user_id: userId }])
@@ -360,9 +343,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return inserted;
   }
 
-  // ======================================================
-  // METAMASK LOGIN FLOW
-  // ======================================================
+  // Initialize wallet and user session
   let savedWallet = localStorage.getItem(CURRENT_WALLET_ADDRESS_KEY);
 
   if (!savedWallet) savedWallet = await detectAndStoreWalletAddress();
@@ -372,7 +353,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // Shorten wallet display
   if (walletChip) {
     walletChip.textContent =
       savedWallet.substring(0, 6) +
@@ -393,9 +373,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Supabase link error:", err);
   }
 
-  // ======================================================
-  // ETH BALANCE DISPLAY
-  // ======================================================
+  // Display ETH balance and chain info
   try {
     if (!window.ethereum) return;
 
@@ -420,7 +398,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const balanceEth = Number(BigInt(balanceHex)) / 1e18;
     if (ethDisplay) ethDisplay.textContent = `${balanceEth.toFixed(4)} ETH`;
 
-    // Fetch ETH price
     try {
       const priceRes = await fetch(
         "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"

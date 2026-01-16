@@ -1,11 +1,4 @@
-/* ============================================================
-   POKECIRCUIT ARENA - HOME.CSS
-   Fixed navbar + Animated background matching PVP lobby
-=============================================================== */
-
-/* ============================================================
-   ANIMATED BACKGROUND - CONSISTENT ACROSS ALL PAGES
-=============================================================== */
+ /* ANIMATED BACKGROUND - CONSISTENT ACROSS ALL PAGES */
 
 .home-body {
     background:
@@ -49,9 +42,7 @@
     }
 }
 
-/* ============================================================
-   NAVBAR - FIXED STRAIGHT ALIGNMENT
-=============================================================== */
+ /* NAVBAR - FIXED STRAIGHT ALIGNMENT */
 
 .pc-navbar {
     padding: 0.8rem 0;
@@ -347,9 +338,7 @@
     padding: 0.5rem;
 }
 
-/* ============================================================
-   MOBILE RESPONSIVE
-=============================================================== */
+/* MOBILE RESPONSIVE */
 
 @media (max-width: 1024px) {
     .pc-nav-links {
@@ -431,9 +420,7 @@
     }
 }
 
-/* ============================================================
-   CONTENT WRAPPER - Ensure content is above background
-=============================================================== */
+/* CONTENT WRAPPER */
 
 main,
 .container,
@@ -443,9 +430,7 @@ section,
     z-index: 1;
 }
 
-/* ============================================================
-   WELCOME BANNER
-=============================================================== */
+/* WELCOME BANNER */
 
 .welcome-banner {
     display: flex;
@@ -480,9 +465,7 @@ section,
     font-weight: 900;
 }
 
-/* ============================================================
-   HERO PROMO
-=============================================================== */
+/* HERO PROMO */
 
 .home-hero {
     margin-top: 2.5rem;
@@ -769,9 +752,7 @@ section,
     }
 }
 
-/* ============================================================
-   FILTER BUTTONS
-=============================================================== */
+/* FILTER BUTTONS */
 
 .market-filter-btn,
 .collection-filter-btn {
@@ -863,9 +844,7 @@ section,
     box-shadow: 0 0 16px rgba(250, 250, 250, 0.9) !important;
 }
 
-/* ============================================================
-   BUY MODAL
-=============================================================== */
+/* BUY MODAL */
 
 .buy-modal-backdrop {
     position: fixed;
@@ -1014,9 +993,7 @@ section,
     }
 }
 
-/* ============================================================
-   PROCESSING (BLOCKING) MODAL
-=============================================================== */
+/* PROCESSING (BLOCKING) MODAL */
 
 .processing-modal-backdrop {
     position: fixed;
@@ -1116,9 +1093,7 @@ section,
     filter: brightness(1.05);
 }
 
-/* ============================================================
-   MARKET HEADER
-=============================================================== */
+/* MARKET HEADER */
 
 .market-title {
     font-family: 'Press Start 2P', cursive;
@@ -1162,9 +1137,7 @@ section,
     }
 }
 
-/* ============================================================
-   FEATURED SECTION
-=============================================================== */
+/* FEATURED SECTION */
 
 .featured-section {
     background: linear-gradient(145deg, rgba(26, 29, 46, 0.9), rgba(15, 18, 25, 0.95));
@@ -1280,9 +1253,7 @@ section,
     letter-spacing: 0.03em;
 }
 
-/* ============================================================
-   MARKET MOBILE RESPONSIVE
-=============================================================== */
+/* MARKET MOBILE RESPONSIVE */
 
 #pokemonGrid.row {
     display: grid;
