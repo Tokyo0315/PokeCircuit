@@ -79,7 +79,7 @@ window.logP2PBuy = async function (
   pokemon,
   price,
   sellerWallet,
-  txHash = null
+  txHash = null,
 ) {
   return await window.logTransaction({
     type: "p2p_buy",
@@ -99,7 +99,7 @@ window.logP2PSell = async function (
   pokemon,
   price,
   buyerWallet,
-  txHash = null
+  txHash = null,
 ) {
   return await window.logTransaction({
     type: "p2p_sell",
@@ -163,7 +163,7 @@ window.logBattleWin = async function (
   tier,
   mode,
   opponentName,
-  pokemon = null
+  pokemon = null,
 ) {
   return await window.logTransaction({
     type: "battle_win",
@@ -186,7 +186,7 @@ window.logBattleLoss = async function (
   tier,
   mode,
   opponentName,
-  pokemon = null
+  pokemon = null,
 ) {
   return await window.logTransaction({
     type: "battle_loss",
@@ -211,7 +211,7 @@ window.logPVPWin = async function (
   pokemon,
   betAmount,
   expGained,
-  opponentName
+  opponentName,
 ) {
   return await window.logTransaction({
     type: "pvp_win",
@@ -251,4 +251,77 @@ window.logPVPBet = async function (betAmount, roomId) {
   });
 };
 
-console.log("✓ Transaction logger loaded (with PVP support)");
+// ============================================================
+// P2P BIDDING TRANSACTION HELPERS
+// ============================================================
+
+// Log placing a bid
+window.logBidPlaced = async function (listing, bidAmount) {
+  return await window.logTransaction({
+    type: "bid_placed",
+    pokemon_name: listing.pokemon_name,
+    pokemon_rarity: listing.rarity,
+    pokemon_sprite: listing.sprite_url,
+    pokemon_level: listing.level || 1,
+    amount: bidAmount,
+    currency: "PKCHP",
+    counterparty_wallet: listing.seller_wallet,
+  });
+};
+
+// Log bid refund (when outbid, cancelled, or listing sold)
+window.logBidRefunded = async function (listing, bidAmount, reason) {
+  return await window.logTransaction({
+    type: "bid_refunded",
+    pokemon_name: listing.pokemon_name,
+    pokemon_rarity: listing.rarity,
+    pokemon_sprite: listing.sprite_url,
+    pokemon_level: listing.level || 1,
+    amount: bidAmount,
+    currency: "PKCHP",
+    tx_hash: reason, // Store reason in tx_hash field
+  });
+};
+
+// Log bid accepted (for the winning bidder)
+window.logBidAccepted = async function (listing, bidAmount, sellerWallet) {
+  return await window.logTransaction({
+    type: "bid_accepted",
+    pokemon_name: listing.pokemon_name,
+    pokemon_rarity: listing.rarity,
+    pokemon_sprite: listing.sprite_url,
+    pokemon_level: listing.level || 1,
+    amount: bidAmount,
+    currency: "PKCHP",
+    counterparty_wallet: sellerWallet,
+  });
+};
+
+// Log bid cancelled by bidder
+window.logBidCancelled = async function (listing, bidAmount) {
+  return await window.logTransaction({
+    type: "bid_cancelled",
+    pokemon_name: listing.pokemon_name,
+    pokemon_rarity: listing.rarity,
+    pokemon_sprite: listing.sprite_url,
+    pokemon_level: listing.level || 1,
+    amount: bidAmount,
+    currency: "PKCHP",
+  });
+};
+
+// Log seller receiving payment from accepted bid
+window.logBidSaleReceived = async function (listing, bidAmount, buyerWallet) {
+  return await window.logTransaction({
+    type: "bid_sale",
+    pokemon_name: listing.pokemon_name,
+    pokemon_rarity: listing.rarity,
+    pokemon_sprite: listing.sprite_url,
+    pokemon_level: listing.level || 1,
+    amount: bidAmount,
+    currency: "PKCHP",
+    counterparty_wallet: buyerWallet,
+  });
+};
+
+console.log("✓ Transaction logger loaded (with PVP and Bidding support)");

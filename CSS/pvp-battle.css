@@ -469,11 +469,20 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
 }
 
 .claim-victory-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 30px rgba(34, 197, 94, 0.6);
+}
+
+.claim-victory-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .return-btn {

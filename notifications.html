@@ -151,17 +151,18 @@
         <section class="row g-4 notif-panels">
             <div class="col-lg-8">
                 <div class="notif-panel">
-                        <div class="notif-panel-header">
-                            <div>
-                                <p class="notif-kicker mb-1">Real-time feed</p>
-                                <h3 class="notif-panel-title mb-0">What is new?</h3>
-                            </div>
-                            <div class="notif-panel-actions">
-                                <button class="chip-btn" id="notifFilterNewss">News</button>
-                                <button class="chip-btn outline" id="notifFilterSales">Sale alerts</button>
-                                <button class="chip-btn outline" id="notifFilterAll">All</button>
-                            </div>
+                    <div class="notif-panel-header">
+                        <div>
+                            <p class="notif-kicker mb-1">Real-time feed</p>
+                            <h3 class="notif-panel-title mb-0">What is new?</h3>
                         </div>
+                        <div class="notif-panel-actions">
+                            <button class="chip-btn outline" id="notifFilterNews">News</button>
+                            <button class="chip-btn outline" id="notifFilterSales">Sales</button>
+                            <button class="chip-btn outline" id="notifFilterBids" data-filter="bids">Bids</button>
+                            <button class="chip-btn active" id="notifFilterAll">All</button>
+                        </div>
+                    </div>
                     <div class="notif-panel-body">
                         <div id="notifEmpty" class="notif-empty">
                             <div class="notif-empty-icon">📪</div>
@@ -226,6 +227,7 @@
             null;
 
         window.PKCHP_ADDRESS = "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
+        window.PVP_ESCROW_ADDRESS = "0x420D05bF983a1bC59917b80E81A0cC4d36486A2D";
 
         window.PKCHP_ABI = [
             {
@@ -259,9 +261,3 @@
 </body>
 
 </html>
-
-
-
-
-
-

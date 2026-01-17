@@ -18,7 +18,7 @@
 }
 
 .cancel-p2p-btn {
-    background-color: darkred; 
+    background-color: darkred;
     border: none;
     color: white;
     width: 50%;
@@ -31,5 +31,400 @@
     color: black;
 }
 
-.pokemon-card-inner { position: relative; }
-.dex-number { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 12px; background: linear-gradient(135deg, #f9ab03, #b8a61f); color: #fefefe; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.04em; box-shadow: 0 0 12px rgba(234, 148, 18, 0.35); z-index: 2; }
+.pokemon-card-inner {
+    position: relative;
+}
+
+.dex-number {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f9ab03, #b8a61f);
+    color: #fefefe;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    box-shadow: 0 0 12px rgba(234, 148, 18, 0.35);
+    z-index: 2;
+}
+
+/* ============================================
+   P2P BIDDING SYSTEM STYLES
+   ============================================ */
+
+/* Bid Info Badge on Cards */
+.bid-badge {
+    position: absolute;
+    top: 45px;
+    right: 10px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    z-index: 3;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+}
+
+.bid-badge.no-bids {
+    background: linear-gradient(135deg, #6c757d, #495057);
+}
+
+/* Bidding Enabled Indicator */
+.bidding-enabled-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 600;
+    z-index: 3;
+}
+
+/* Card Button Group */
+.card-btn-group {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.card-btn-group .btn {
+    flex: 1;
+    min-width: 80px;
+    font-size: 0.75rem;
+    padding: 6px 8px;
+}
+
+/* Bid Button */
+.bid-p2p-btn {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+.bid-p2p-btn:hover {
+    background: linear-gradient(135deg, #218838, #1ea085) !important;
+    transform: translateY(-1px);
+}
+
+/* View Bids Button */
+.view-bids-btn {
+    background: linear-gradient(135deg, #17a2b8, #138496) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+.view-bids-btn:hover {
+    background: linear-gradient(135deg, #138496, #117a8b) !important;
+}
+
+/* My Bids Button */
+.my-bids-btn {
+    background: linear-gradient(135deg, #6f42c1, #5a32a3) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.my-bids-btn:hover {
+    background: linear-gradient(135deg, #5a32a3, #4a2a8a) !important;
+}
+
+/* Bid Info Box in Modal */
+.bid-info-box {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bid-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bid-info-row:last-child {
+    border-bottom: none;
+}
+
+.bid-label {
+    color: #adb5bd;
+    font-size: 0.85rem;
+}
+
+.bid-value {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Wide Modal for Bids List */
+.buy-modal-wide {
+    max-width: 700px;
+    width: 95%;
+}
+
+/* Bids List Container */
+.bids-list-container {
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.bids-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.bids-list-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.bids-list-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+/* Individual Bid Item */
+.bid-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.bid-item:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.bid-item.highest-bid {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.15);
+}
+
+.bid-item-info {
+    flex: 1;
+}
+
+.bid-item-bidder {
+    font-weight: 600;
+    color: #e9ecef;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.bid-item-wallet {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-family: monospace;
+}
+
+.bid-item-time {
+    font-size: 0.7rem;
+    color: #868e96;
+    margin-top: 2px;
+}
+
+.bid-item-amount {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #28a745;
+    margin-right: 12px;
+}
+
+.bid-item-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.accept-bid-btn {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    border: none !important;
+    color: white !important;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+.accept-bid-btn:hover {
+    background: linear-gradient(135deg, #218838, #1ea085) !important;
+}
+
+/* Highest Bid Label */
+.highest-bid-label {
+    background: #28a745;
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-weight: 600;
+}
+
+/* My Bids List */
+.my-bids-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.my-bid-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.my-bid-sprite {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-right: 12px;
+}
+
+.my-bid-info {
+    flex: 1;
+}
+
+.my-bid-pokemon {
+    font-weight: 600;
+    color: #e9ecef;
+    font-size: 0.95rem;
+}
+
+.my-bid-details {
+    font-size: 0.8rem;
+    color: #adb5bd;
+}
+
+.my-bid-status {
+    font-size: 0.7rem;
+    margin-top: 4px;
+}
+
+.my-bid-status.active {
+    color: #28a745;
+}
+
+.my-bid-status.outbid {
+    color: #dc3545;
+}
+
+.my-bid-status.highest {
+    color: #ffc107;
+}
+
+.my-bid-amount {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #28a745;
+    margin-right: 12px;
+}
+
+.cancel-bid-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    border: none !important;
+    color: white !important;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+.cancel-bid-btn:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130) !important;
+}
+
+/* Accept Bid Details */
+.accept-bid-details {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+/* Listing Card Bid Info */
+.listing-bid-info {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    border-radius: 6px;
+    padding: 8px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+}
+
+.listing-bid-info .bid-label {
+    color: #adb5bd;
+    font-size: 0.75rem;
+}
+
+.listing-bid-info .bid-amount {
+    color: #28a745;
+    font-weight: 700;
+}
+
+/* Starting Bid Display */
+.starting-bid-display {
+    color: #17a2b8;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .buy-modal-wide {
+        max-width: 100%;
+    }
+
+    .bid-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .bid-item-amount {
+        margin-right: 0;
+    }
+
+    .bid-item-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .my-bid-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .my-bid-sprite {
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+
+    .card-btn-group {
+        flex-direction: column;
+    }
+
+    .card-btn-group .btn {
+        width: 100%;
+    }
+}

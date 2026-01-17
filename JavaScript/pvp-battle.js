@@ -25,9 +25,67 @@
   // Contract addresses (use defaults if env vars missing)
   const PKCHP_ADDRESS =
     window.PKCHP_ADDRESS || "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
-  const BATTLE_REWARDS_ADDRESS =
-    window.BATTLE_REWARDS_ADDRESS ||
-    "0x80617C5F2069eF97792F77e1F28A4aD410B80578";
+  const PVP_ESCROW_ADDRESS =
+    window.PVP_ESCROW_ADDRESS || "0x420D05bF983a1bC59917b80E81A0cC4d36486A2D";
+
+  const PVP_ESCROW_ABI = [
+    {
+      inputs: [
+        { internalType: "bytes32", name: "roomId", type: "bytes32" },
+        { internalType: "address", name: "winner", type: "address" },
+      ],
+      name: "confirmWinner",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "bytes32", name: "roomId", type: "bytes32" }],
+      name: "claimPrize",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "bytes32", name: "roomId", type: "bytes32" }],
+      name: "getRoom",
+      outputs: [
+        { internalType: "address", name: "player1", type: "address" },
+        { internalType: "address", name: "player2", type: "address" },
+        { internalType: "uint256", name: "betAmount", type: "uint256" },
+        { internalType: "uint256", name: "createdAt", type: "uint256" },
+        { internalType: "uint256", name: "battleStartedAt", type: "uint256" },
+        { internalType: "address", name: "winner", type: "address" },
+        { internalType: "uint8", name: "status", type: "uint8" },
+      ],
+      stateMutability: "view",
+      type: "function",
+    },
+    {
+      inputs: [{ internalType: "bytes32", name: "roomId", type: "bytes32" }],
+      name: "getPrizeAmount",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      stateMutability: "view",
+      type: "function",
+    },
+  ];
+
+  // Escrow status constants matching the smart contract enum
+  const ESCROW_STATUS = {
+    WAITING_FOR_OPPONENT: 0,
+    BATTLE_IN_PROGRESS: 1,
+    BATTLE_COMPLETE: 2,
+    CANCELLED: 3,
+    CLAIMED: 4,
+  };
+
+  const ESCROW_STATUS_NAMES = {
+    0: "WaitingForOpponent",
+    1: "BattleInProgress",
+    2: "BattleComplete",
+    3: "Cancelled",
+    4: "Claimed",
+  };
 
   // DOM references for the battle UI
 
@@ -97,7 +155,7 @@
   let lastMyPokemonId = null;
   let lastOpponentPokemonId = null;
 
- // Name/wallet formatting helpers
+  // Name/wallet formatting helpers
 
   function shortenWallet(wallet) {
     if (!wallet) return "Unknown";
@@ -177,7 +235,10 @@
         updatePayload.speed = (mon.speed || 50) + statIncrease;
       }
 
-      await supabase.from("user_pokemon").update(updatePayload).eq("id", mon.id);
+      await supabase
+        .from("user_pokemon")
+        .update(updatePayload)
+        .eq("id", mon.id);
     }
   }
 
@@ -187,81 +248,366 @@
     }
   }
 
-  // PKCHP reward + payout helpers
+  // Escrow helpers
 
-  async function transferPKCHP(toAddress, amount) {
-    if (!window.ethereum) {
-      console.error("No wallet connected");
-      return false;
+  function roomCodeToBytes32(roomCode) {
+    return ethers.keccak256(ethers.toUtf8Bytes(roomCode));
+  }
+
+  // Get the current escrow room status from the blockchain
+  async function getEscrowRoomStatus(roomCode) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS || !roomCode) {
+      return null;
     }
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      const escrowContract = new ethers.Contract(
+        PVP_ESCROW_ADDRESS,
+        PVP_ESCROW_ABI,
+        provider,
+      );
+      const roomEscrowId = roomCodeToBytes32(roomCode);
+      const roomData = await escrowContract.getRoom(roomEscrowId);
 
-      const pkchpContract = new ethers.Contract(
-        PKCHP_ADDRESS,
-        [
-          {
-            inputs: [
-              { internalType: "address", name: "to", type: "address" },
-              { internalType: "uint256", name: "amount", type: "uint256" },
-            ],
-            name: "transfer",
-            outputs: [{ internalType: "bool", name: "", type: "bool" }],
-            stateMutability: "nonpayable",
-            type: "function",
-          },
-        ],
-        signer
+      const player1 = roomData[0];
+      const player2 = roomData[1];
+      const betAmount = roomData[2];
+      const createdAt = Number(roomData[3]);
+      const battleStartedAt = Number(roomData[4]);
+      const winner = roomData[5];
+      const status = Number(roomData[6]);
+
+      const zeroAddress = "0x0000000000000000000000000000000000000000";
+      const roomExists = player1 !== zeroAddress;
+
+      console.log("📊 Escrow room status:", {
+        roomCode,
+        roomExists,
+        player1,
+        player2,
+        betAmount: betAmount.toString(),
+        status,
+        statusName: ESCROW_STATUS_NAMES[status] || "Unknown",
+        winner,
+        createdAt,
+        battleStartedAt,
+      });
+
+      return {
+        exists: roomExists,
+        player1,
+        player2,
+        betAmount,
+        createdAt,
+        battleStartedAt,
+        winner,
+        status,
+        statusName: ESCROW_STATUS_NAMES[status] || "Unknown",
+      };
+    } catch (err) {
+      console.error("Failed to get escrow room status:", err);
+      return null;
+    }
+  }
+
+  async function getEscrowPrizeAmount(roomCode) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS || !roomCode) {
+      return room.bet_amount * 2;
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const escrowContract = new ethers.Contract(
+        PVP_ESCROW_ADDRESS,
+        PVP_ESCROW_ABI,
+        provider,
+      );
+      const roomEscrowId = roomCodeToBytes32(roomCode);
+      const prizeWei = await escrowContract.getPrizeAmount(roomEscrowId);
+      return Math.floor(Number(ethers.formatUnits(prizeWei, 18)));
+    } catch (err) {
+      console.warn("Escrow prize lookup failed:", err);
+      return room.bet_amount * 2;
+    }
+  }
+
+  // Claim prize from escrow - auto-confirms winner if needed
+  async function claimEscrowPrize(roomCode) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS || !roomCode) {
+      throw new Error("Wallet not connected for escrow claim");
+    }
+
+    // First check the current escrow state
+    const escrowStatus = await getEscrowRoomStatus(roomCode);
+
+    if (!escrowStatus || !escrowStatus.exists) {
+      throw new Error(
+        "Escrow room not found on blockchain. The room may not have been created on-chain or both players did not deposit.",
+      );
+    }
+
+    const currentWallet = CURRENT_WALLET.toLowerCase();
+
+    // Status 0: WaitingForOpponent - opponent never joined escrow
+    if (escrowStatus.status === ESCROW_STATUS.WAITING_FOR_OPPONENT) {
+      throw new Error(
+        "Opponent never deposited to escrow. Both players must deposit PKCHP before battle. The escrow was not properly set up.",
+      );
+    }
+
+    // Status 3: Cancelled
+    if (escrowStatus.status === ESCROW_STATUS.CANCELLED) {
+      throw new Error(
+        "This battle was cancelled. Refunds should have been issued.",
+      );
+    }
+
+    // Status 4: Already claimed
+    if (escrowStatus.status === ESCROW_STATUS.CLAIMED) {
+      throw new Error("Prize has already been claimed for this battle.");
+    }
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const escrowContract = new ethers.Contract(
+      PVP_ESCROW_ADDRESS,
+      PVP_ESCROW_ABI,
+      signer,
+    );
+    const roomEscrowId = roomCodeToBytes32(roomCode);
+
+    // Status 1: BattleInProgress - need to confirm winner first
+    if (escrowStatus.status === ESCROW_STATUS.BATTLE_IN_PROGRESS) {
+      console.log(
+        "⚠️ Battle still in progress on-chain, confirming winner first...",
       );
 
-      const amountWei = ethers.parseUnits(amount.toString(), 18);
-      const tx = await pkchpContract.transfer(toAddress, amountWei);
-      await tx.wait();
+      // Verify current user is a player in this room
+      const isPlayer1 = escrowStatus.player1.toLowerCase() === currentWallet;
+      const isPlayer2 = escrowStatus.player2.toLowerCase() === currentWallet;
 
-      console.log(`? Transferred ${amount} PKCHP to ${toAddress}`);
+      if (!isPlayer1 && !isPlayer2) {
+        throw new Error("You are not a player in this escrow room.");
+      }
+
+      // Confirm the winner (current user claiming is the winner)
+      console.log("📝 Confirming winner on-chain:", CURRENT_WALLET);
+      const confirmTx = await escrowContract.confirmWinner(
+        roomEscrowId,
+        CURRENT_WALLET,
+      );
+      await confirmTx.wait();
+      console.log("✅ Winner confirmed on-chain!");
+
+      // Now claim immediately after confirming (we just set ourselves as winner)
+      console.log("💰 Claiming prize from escrow...");
+      const tx = await escrowContract.claimPrize(roomEscrowId);
+      await tx.wait();
+      console.log("✅ Prize claimed successfully!");
+      return;
+    }
+
+    // Status 2: BattleComplete - verify we are the winner then claim
+    if (escrowStatus.status === ESCROW_STATUS.BATTLE_COMPLETE) {
+      if (escrowStatus.winner.toLowerCase() !== currentWallet) {
+        throw new Error("Only the winner can claim the prize.");
+      }
+
+      console.log("💰 Claiming prize from escrow...");
+      const tx = await escrowContract.claimPrize(roomEscrowId);
+      await tx.wait();
+      console.log("✅ Prize claimed successfully!");
+      return;
+    }
+
+    // Fallback - shouldn't reach here but try to claim anyway
+    console.log("💰 Claiming prize from escrow...");
+    const tx = await escrowContract.claimPrize(roomEscrowId);
+    await tx.wait();
+    console.log("✅ Prize claimed successfully!");
+  }
+
+  // Confirm winner on escrow - checks state first
+  async function confirmEscrowWinner(roomCode, winner) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS || !roomCode || !winner) {
+      throw new Error("Wallet not connected for escrow confirm");
+    }
+
+    // First check the current escrow state
+    const escrowStatus = await getEscrowRoomStatus(roomCode);
+
+    if (!escrowStatus || !escrowStatus.exists) {
+      console.warn("⚠️ Escrow room not found - skipping winner confirmation");
+      return;
+    }
+
+    // If already complete or claimed, no need to confirm again
+    if (escrowStatus.status === ESCROW_STATUS.BATTLE_COMPLETE) {
+      console.log("✅ Winner already confirmed on-chain, skipping");
+      return;
+    }
+
+    if (escrowStatus.status === ESCROW_STATUS.CLAIMED) {
+      console.log("✅ Prize already claimed, skipping confirmation");
+      return;
+    }
+
+    if (escrowStatus.status === ESCROW_STATUS.CANCELLED) {
+      console.warn("⚠️ Battle was cancelled, cannot confirm winner");
+      return;
+    }
+
+    // Status 0: Opponent never joined
+    if (escrowStatus.status === ESCROW_STATUS.WAITING_FOR_OPPONENT) {
+      console.warn(
+        "⚠️ Opponent never deposited to escrow - cannot confirm winner",
+      );
+      throw new Error(
+        "Escrow not ready: opponent never deposited. Both players must complete the escrow deposit before battle.",
+      );
+    }
+
+    // Status 1: Battle in progress - can confirm winner
+    if (escrowStatus.status === ESCROW_STATUS.BATTLE_IN_PROGRESS) {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const escrowContract = new ethers.Contract(
+        PVP_ESCROW_ADDRESS,
+        PVP_ESCROW_ABI,
+        signer,
+      );
+      const roomEscrowId = roomCodeToBytes32(roomCode);
+
+      console.log("📝 Confirming winner on escrow:", winner);
+      const tx = await escrowContract.confirmWinner(roomEscrowId, winner);
+      await tx.wait();
+      console.log("✅ Winner confirmed on-chain!");
+    }
+  }
+
+  async function isEscrowClaimable(roomCode) {
+    if (!window.ethereum || !PVP_ESCROW_ADDRESS || !roomCode) {
+      return { ok: false, reason: "Wallet not connected." };
+    }
+
+    try {
+      const escrowStatus = await getEscrowRoomStatus(roomCode);
+
+      if (!escrowStatus || !escrowStatus.exists) {
+        return { ok: false, reason: "Escrow room not found on blockchain." };
+      }
+
+      const wallet = String(CURRENT_WALLET || "").toLowerCase();
+      const winner = String(escrowStatus.winner || "").toLowerCase();
+
+      // Check various states
+      if (escrowStatus.status === ESCROW_STATUS.WAITING_FOR_OPPONENT) {
+        return { ok: false, reason: "Opponent never deposited to escrow." };
+      }
+
+      if (escrowStatus.status === ESCROW_STATUS.CANCELLED) {
+        return { ok: false, reason: "Battle was cancelled." };
+      }
+
+      if (escrowStatus.status === ESCROW_STATUS.CLAIMED) {
+        return { ok: false, reason: "Prize already claimed." };
+      }
+
+      // BattleInProgress - can claim (will auto-confirm winner)
+      if (escrowStatus.status === ESCROW_STATUS.BATTLE_IN_PROGRESS) {
+        const isPlayer =
+          escrowStatus.player1.toLowerCase() === wallet ||
+          escrowStatus.player2.toLowerCase() === wallet;
+        if (!isPlayer) {
+          return { ok: false, reason: "You are not a player in this room." };
+        }
+        return { ok: true, reason: "", needsConfirmation: true };
+      }
+
+      // BattleComplete - check if user is winner
+      if (escrowStatus.status === ESCROW_STATUS.BATTLE_COMPLETE) {
+        const noWinner =
+          !winner || winner === "0x0000000000000000000000000000000000000000";
+        if (noWinner || winner !== wallet) {
+          return { ok: false, reason: "Only the winner can claim." };
+        }
+        return { ok: true, reason: "" };
+      }
+
+      return { ok: false, reason: "Unknown escrow state." };
+    } catch (err) {
+      console.warn("Escrow claim check failed:", err);
+      return { ok: false, reason: "Unable to verify escrow status." };
+    }
+  }
+
+  async function logPvpWinPending(prizeAmount, opponentDisplayName) {
+    if (!window.logTransaction) return false;
+
+    try {
+      await window.logTransaction({
+        type: "pvp_win_pending",
+        pokemon_name: myPokemon.name,
+        pokemon_rarity: myPokemon.rarity,
+        pokemon_sprite: myPokemon.sprite,
+        pokemon_level: myPokemon.level,
+        amount: prizeAmount,
+        currency: "PKCHP",
+        opponent_name: opponentDisplayName,
+        exp_gained: room.exp_reward || 0,
+        metadata: {
+          room_code: room.room_code,
+          room_id: roomId,
+          bet_amount: room.bet_amount,
+        },
+      });
       return true;
     } catch (err) {
-      console.error("PKCHP transfer failed:", err);
+      console.warn("PVP win pending log failed:", err);
       return false;
     }
   }
 
-  async function claimFromRewardsContract(amount) {
-    if (!window.ethereum) {
-      console.error("No wallet connected");
-      return false;
-    }
+  async function createPvpWinNotification(prizeAmount, opponentDisplayName) {
+    if (!supabase || !CURRENT_USER_ID) return false;
+
+    // Use bet_amount * 2 as fallback if prizeAmount is 0 or invalid
+    const displayAmount = prizeAmount > 0 ? prizeAmount : room.bet_amount * 2;
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      const { error } = await supabase.from("notifications").insert({
+        user_id: CURRENT_USER_ID,
+        type: "pvp_win",
+        message: `You win in PVP vs ${opponentDisplayName}! Claim your reward.`,
+        pokemon_name: myPokemon.name,
+        pokemon_sprite: myPokemon.sprite,
+        amount: displayAmount,
+        from_wallet: isHost ? room.guest_wallet : room.host_wallet,
+        room_code: room.room_code,
+        metadata: {
+          room_code: room.room_code,
+          room_id: roomId,
+          opponent_name: opponentDisplayName,
+          exp_reward: room.exp_reward || 0,
+          battle_mode: battleMode,
+          bet_amount: room.bet_amount,
+        },
+        is_read: false,
+      });
 
-      const rewardsContract = new ethers.Contract(
-        BATTLE_REWARDS_ADDRESS,
-        [
-          {
-            inputs: [
-              { internalType: "uint256", name: "amount", type: "uint256" },
-            ],
-            name: "claimReward",
-            outputs: [],
-            stateMutability: "nonpayable",
-            type: "function",
-          },
-        ],
-        signer
+      if (error) {
+        console.error("Failed to create PVP win notification:", error);
+        return false;
+      }
+
+      console.log(
+        "✅ PVP win notification created with amount:",
+        displayAmount,
       );
-
-      const amountWei = ethers.parseUnits(amount.toString(), 18);
-      const tx = await rewardsContract.claimReward(amountWei);
-      await tx.wait();
-
-      console.log(`? Claimed ${amount} PKCHP from rewards contract`);
       return true;
     } catch (err) {
-      console.error("Claim from rewards contract failed:", err);
+      console.warn("PVP win notification creation failed:", err);
       return false;
     }
   }
@@ -337,7 +683,10 @@
         updatePayload.guest_pokemon = guestTeam;
       }
 
-      await supabase.from("pvp_battle_rooms").update(updatePayload).eq("id", roomId);
+      await supabase
+        .from("pvp_battle_rooms")
+        .update(updatePayload)
+        .eq("id", roomId);
     }
 
     renderBattleUI();
@@ -353,7 +702,7 @@
     console.log("? PVP Battle initialized");
   }
 
- // RENDER BATTLE UI
+  // RENDER BATTLE UI
 
   function renderBattleUI() {
     playerPokemonSprite.src = myPokemon.sprite;
@@ -380,12 +729,12 @@
     `;
   }
 
- // LOAD MOVES
+  // LOAD MOVES
 
   async function loadMoves() {
     try {
       const response = await fetch(
-        `https://pokeapi.co/api/v2/pokemon/${myPokemon.name.toLowerCase()}`
+        `https://pokeapi.co/api/v2/pokemon/${myPokemon.name.toLowerCase()}`,
       );
       const data = await response.json();
 
@@ -443,7 +792,7 @@
     const randomFactor = Math.random() * 0.3 + 0.85;
 
     const damage = Math.floor(
-      ((baseDamage * (attackStat / defenseStat)) / 2) * randomFactor
+      ((baseDamage * (attackStat / defenseStat)) / 2) * randomFactor,
     );
 
     log(`${myPokemon.name} used ${move.name}!`, "#22c55e");
@@ -455,7 +804,7 @@
       opponentPokemonSprite.classList.add("damage-flash");
       setTimeout(
         () => opponentPokemonSprite.classList.remove("damage-flash"),
-        350
+        350,
       );
       log(`${opponentPokemon.name} took ${damage} damage!`, "#ef4444");
     }, 300);
@@ -498,7 +847,7 @@
       updateData.guest_current_hp =
         battleMode === "team"
           ? nextOpponent
-            ? nextOpponent.current_hp ?? nextOpponent.hp
+            ? (nextOpponent.current_hp ?? nextOpponent.hp)
             : 0
           : newOpponentHP;
       updateData.current_turn = room.guest_id;
@@ -509,7 +858,7 @@
       updateData.host_current_hp =
         battleMode === "team"
           ? nextOpponent
-            ? nextOpponent.current_hp ?? nextOpponent.hp
+            ? (nextOpponent.current_hp ?? nextOpponent.hp)
             : 0
           : newOpponentHP;
       updateData.current_turn = room.host_id;
@@ -539,7 +888,9 @@
       renderCard(opponentCardInfo, opponentPokemon, opponentHP, opponentMaxHP);
     }
 
-    if (battleMode === "team" ? opponentTeam.length === 0 : newOpponentHP <= 0) {
+    if (
+      battleMode === "team" ? opponentTeam.length === 0 : newOpponentHP <= 0
+    ) {
       handleVictory();
     } else {
       isMyTurn = false;
@@ -562,7 +913,7 @@
         },
         (payload) => {
           handleRoomUpdate(payload.new);
-        }
+        },
       )
       .subscribe();
   }
@@ -655,7 +1006,7 @@
     }
 
     if (updatedRoom.status === "cancelled" && battleActive) {
-      handleOpponentLeft();
+      await handleOpponentLeft();
     }
   }
 
@@ -669,12 +1020,11 @@
       playerPokemonSprite.classList.add("damage-flash");
       setTimeout(
         () => playerPokemonSprite.classList.remove("damage-flash"),
-        350
+        350,
       );
       log(`${myPokemon.name} took ${moveData.damage} damage!`, "#3b82f6");
     }, 300);
   }
-
 
   // TURN MANAGEMENT
 
@@ -734,8 +1084,8 @@
     battleActive = false;
     stopTurnTimer();
 
-    log("?? " + opponentPokemon.name + " fainted!", "#22c55e");
-    log("?? YOU WIN!", "#ffd86b");
+    log("🎉 " + opponentPokemon.name + " fainted!", "#22c55e");
+    log("🏆 YOU WIN!", "#ffd86b");
 
     await supabase
       .from("pvp_battle_rooms")
@@ -747,20 +1097,57 @@
       })
       .eq("id", roomId);
 
-    wonAmount.textContent = room.bet_amount * 2;
+    // Calculate prize amount
+    const prizeAmount = room.bet_amount * 2;
+
+    wonAmount.textContent = prizeAmount;
     wonExp.textContent = room.exp_reward || 50;
     opponentLostPokemon.textContent =
       battleMode === "team" ? "Opponent Team" : opponentPokemon.name;
 
     victoryModal.classList.add("show");
+
+    // Winner confirms themselves on-chain (loser will also confirm)
+    try {
+      log("Confirming winner on blockchain...", "#ffd86b");
+      await confirmEscrowWinner(room.room_code, CURRENT_WALLET);
+      log("Winner confirmed on-chain!", "#22c55e");
+    } catch (err) {
+      console.warn(
+        "Winner confirmation failed (may need to confirm from notifications):",
+        err,
+      );
+    }
+
+    // Create notification for claiming later
+    try {
+      const opponentDisplayName = getDisplayName(
+        isHost ? room.guest_username : room.host_username,
+        isHost ? room.guest_wallet : room.host_wallet,
+      );
+
+      await createPvpWinNotification(prizeAmount, opponentDisplayName);
+    } catch (err) {
+      console.warn("PVP win notification failed:", err);
+    }
   }
 
   async function handleDefeat() {
     battleActive = false;
     stopTurnTimer();
 
-    log("?? " + myPokemon.name + " fainted!", "#ef4444");
-    log("?? YOU LOSE...", "#ef4444");
+    log("💀 " + myPokemon.name + " fainted!", "#ef4444");
+    log("😢 YOU LOSE...", "#ef4444");
+
+    // Loser confirms the winner on-chain (acknowledges defeat)
+    const winnerWallet = isHost ? room.guest_wallet : room.host_wallet;
+    try {
+      log("Acknowledging defeat on blockchain...", "#f59e0b");
+      await confirmEscrowWinner(room.room_code, winnerWallet);
+      log("Defeat acknowledged on-chain.", "#f59e0b");
+    } catch (err) {
+      console.warn("Defeat acknowledgement failed:", err);
+    }
 
     lostAmount.textContent = room.bet_amount;
     lostPokemonSprite.src = myPokemon.sprite;
@@ -770,145 +1157,203 @@
     defeatModal.classList.add("show");
   }
 
-  function handleOpponentLeft() {
+  async function handleOpponentLeft() {
     battleActive = false;
     stopTurnTimer();
 
     log("?? Opponent disconnected!", "#f59e0b");
     log("?? You win by forfeit!", "#22c55e");
 
-    forfeitAmount.textContent = room.bet_amount * 2;
-    opponentLeftModal.classList.add("show");
-  }
-
-  // CLAIM VICTORY — XP + token payout
-
-  claimVictoryBtn.addEventListener("click", async () => {
-    claimVictoryBtn.disabled = true;
-    claimVictoryBtn.textContent = "CLAIMING...";
-    showTxModal("CLAIMING REWARDS", "Processing your victory rewards...");
-
+    // Calculate prize amount with fallback
+    let prizeAmount = room.bet_amount * 2;
     try {
-      const loserId = isHost ? room.guest_id : room.host_id;
-      const loserPokemon = isHost ? room.guest_pokemon : room.host_pokemon;
-      const loserWallet = isHost ? room.guest_wallet : room.host_wallet;
-      const expReward = room.exp_reward || 50;
-      const rewardAmount = room.bet_amount * 2;
-      const loserTeam =
-        battleMode === "team" ? initialOpponentTeam : normalizeTeam(loserPokemon);
-      const winnerTeam = battleMode === "team" ? initialMyTeam : [myPokemon];
-
-      // Step 1: Delete loser's Pokemon
-      txMessage.textContent =
-        battleMode === "team"
-          ? "Deleting opponent's team..."
-          : "Deleting opponent's Pokemon...";
-      await deleteTeam(loserTeam);
-
-      // Step 2: Update winner's Pokemon EXP
-      txMessage.textContent =
-        battleMode === "team"
-          ? "Adding EXP to your team..."
-          : "Adding EXP to your Pokemon...";
-      await awardExpToTeam(winnerTeam, expReward);
-
-      // Step 3: Try to claim PKCHP from rewards contract
-      txMessage.textContent = "Claiming PKCHP rewards...";
-      let claimSuccess = false;
-
-      try {
-        claimSuccess = await claimFromRewardsContract(rewardAmount);
-      } catch (err) {
-        console.error(
-          "Rewards contract claim failed, trying direct transfer:",
-          err
-        );
+      const escrowAmount = await getEscrowPrizeAmount(room.room_code);
+      if (escrowAmount > 0) {
+        prizeAmount = escrowAmount;
       }
+    } catch (err) {
+      console.warn("Could not fetch escrow amount, using bet_amount * 2:", err);
+    }
 
-      // Step 4: Log transaction with sprite URL
-      txMessage.textContent = "Recording transaction...";
+    forfeitAmount.textContent = prizeAmount;
+    opponentLeftModal.classList.add("show");
+
+    // Create notification for forfeit win
+    try {
       const opponentDisplayName = getDisplayName(
         isHost ? room.guest_username : room.host_username,
-        loserWallet
+        isHost ? room.guest_wallet : room.host_wallet,
       );
-
-      if (window.logTransaction) {
-        await window.logTransaction({
-          type: "pvp_win",
-          pokemon_name: myPokemon.name,
-          pokemon_rarity: myPokemon.rarity,
-          pokemon_sprite: myPokemon.sprite,
-          pokemon_level: myPokemon.level,
-          amount: rewardAmount,
-          currency: "PKCHP",
-          opponent_name: opponentDisplayName,
-          exp_gained: expReward,
-        });
-      }
-
-      // Step 5: Record in battle history
-      await supabase.from("pvp_battle_history").insert({
-        room_id: roomId,
-        player1_id: room.host_id,
-        player2_id: room.guest_id,
-        winner_id: CURRENT_USER_ID,
-        loser_id: loserId,
-        bet_amount: room.bet_amount,
-        lost_pokemon_name: loserPokemon.name,
-        total_turns: room.turn_number,
-      });
-
-      hideTxModal();
-
-      if (claimSuccess) {
-        showRewardNotice(
-          "REWARDS INCOMING",
-          "Please wait for your reward and Pokemon EXP to be sent."
-        );
-      } else {
-        showRewardNotice(
-          "REWARDS PENDING",
-          "Please wait for your reward and Pokemon EXP to be sent."
-        );
-      }
-
-      const finishAndReturn = () => {
-        rewardNoticeModal.classList.remove("show");
-        clearRoomData();
-        window.location.href = "pvp-lobby.html";
-      };
-
-      rewardNoticeOk.onclick = finishAndReturn;
-      setTimeout(finishAndReturn, 2500);
+      await createPvpWinNotification(prizeAmount, opponentDisplayName);
     } catch (err) {
-      console.error("Claim error:", err);
-      hideTxModal();
-      showRewardNotice(
-        "REWARDS PENDING",
-        "Please wait for your reward and Pokemon EXP to be sent."
-      );
-
-      const finishAndReturn = () => {
-        rewardNoticeModal.classList.remove("show");
-        clearRoomData();
-        window.location.href = "pvp-lobby.html";
-      };
-
-      rewardNoticeOk.onclick = finishAndReturn;
-      setTimeout(finishAndReturn, 2500);
+      console.warn("Forfeit notification creation failed:", err);
     }
-  });
+  }
 
+  // CLAIM VICTORY — XP + token payout (on-chain escrow only)
 
-  // RETURN AFTER DEFEAT — pay the winner
+  if (claimVictoryBtn) {
+    claimVictoryBtn.addEventListener("click", async () => {
+      console.log("🎯 Claim Victory button clicked!");
+
+      claimVictoryBtn.disabled = true;
+      claimVictoryBtn.textContent = "CLAIMING...";
+      showTxModal("CLAIMING REWARDS", "Processing your victory rewards...");
+
+      try {
+        const loserId = isHost ? room.guest_id : room.host_id;
+        const loserPokemon = isHost ? room.guest_pokemon : room.host_pokemon;
+        const loserWallet = isHost ? room.guest_wallet : room.host_wallet;
+        const expReward = room.exp_reward || 50;
+        const rewardAmount = room.bet_amount * 2;
+
+        console.log("📊 Claim data:", {
+          loserId,
+          expReward,
+          betAmount: room.bet_amount,
+          rewardAmount,
+          roomCode: room.room_code,
+        });
+
+        const loserTeam =
+          battleMode === "team"
+            ? initialOpponentTeam
+            : normalizeTeam(loserPokemon);
+        const winnerTeam = battleMode === "team" ? initialMyTeam : [myPokemon];
+
+        // Step 1: Delete loser's Pokemon
+        txMessage.textContent =
+          battleMode === "team"
+            ? "Deleting opponent's team..."
+            : "Deleting opponent's Pokemon...";
+        console.log("🗑️ Deleting loser team:", loserTeam);
+        await deleteTeam(loserTeam);
+
+        // Step 2: Update winner's Pokemon EXP
+        txMessage.textContent =
+          battleMode === "team"
+            ? "Adding EXP to your team..."
+            : "Adding EXP to your Pokemon...";
+        console.log("✨ Awarding EXP to winner team:", winnerTeam);
+        await awardExpToTeam(winnerTeam, expReward);
+
+        // Step 3: Claim from escrow contract
+        txMessage.textContent =
+          "Claiming PKCHP from escrow... (Confirm in MetaMask)";
+        console.log("💰 Calling claimPrize on escrow contract...");
+        console.log("   Room code:", room.room_code);
+
+        await claimEscrowPrize(room.room_code);
+        console.log("✅ Prize claimed from escrow!");
+
+        const actualPrizeAmount =
+          (await getEscrowPrizeAmount(room.room_code)) || rewardAmount;
+
+        // Step 4: Log transaction
+        txMessage.textContent = "Logging transaction...";
+        const opponentDisplayName = getDisplayName(
+          isHost ? room.guest_username : room.host_username,
+          loserWallet,
+        );
+
+        if (window.logTransaction) {
+          console.log("📝 Logging transaction...");
+          await window.logTransaction({
+            type: "pvp_win",
+            pokemon_name: myPokemon.name,
+            pokemon_rarity: myPokemon.rarity,
+            pokemon_sprite: myPokemon.sprite,
+            pokemon_level: myPokemon.level,
+            amount: actualPrizeAmount,
+            currency: "PKCHP",
+            opponent_name: opponentDisplayName,
+            exp_gained: expReward,
+          });
+        }
+
+        // Step 5: Mark the notification as claimed
+        txMessage.textContent = "Finalizing...";
+        try {
+          await supabase
+            .from("notifications")
+            .update({ is_read: true })
+            .eq("user_id", CURRENT_USER_ID)
+            .eq("type", "pvp_win")
+            .eq("room_code", room.room_code);
+          console.log("✅ Notification marked as claimed");
+        } catch (notifErr) {
+          console.warn("Notification update error (non-critical):", notifErr);
+        }
+
+        // Step 6: Record in battle history (non-critical)
+        try {
+          console.log("📜 Recording battle history...");
+          await supabase.from("pvp_battle_history").insert({
+            room_id: roomId,
+            player1_id: room.host_id,
+            player2_id: room.guest_id,
+            winner_id: CURRENT_USER_ID,
+            loser_id: loserId,
+            bet_amount: room.bet_amount,
+            lost_pokemon_name: loserPokemon?.name || "Unknown",
+            total_turns: room.turn_number,
+          });
+        } catch (historyErr) {
+          console.warn(
+            "Battle history insert failed (non-critical):",
+            historyErr,
+          );
+        }
+
+        console.log("✅ Claim successful!");
+        hideTxModal();
+
+        showRewardNotice(
+          "REWARD CLAIMED",
+          `You won ${actualPrizeAmount} PKCHP and ${expReward} EXP!`,
+        );
+
+        const finishAndReturn = () => {
+          rewardNoticeModal.classList.remove("show");
+          clearRoomData();
+          window.location.href = "pvp-lobby.html";
+        };
+
+        rewardNoticeOk.onclick = finishAndReturn;
+        setTimeout(finishAndReturn, 3500);
+      } catch (err) {
+        console.error("❌ Claim error:", err);
+        hideTxModal();
+
+        let errorMsg = err.message || "Please try again.";
+        if (
+          errorMsg.includes("user rejected") ||
+          errorMsg.includes("User denied")
+        ) {
+          errorMsg = "Transaction rejected. Please try again.";
+        } else if (errorMsg.includes("Battle not complete")) {
+          errorMsg =
+            "Battle not finalized yet. Wait for opponent to confirm or try from Notifications.";
+        } else if (errorMsg.includes("Only winner can claim")) {
+          errorMsg = "Only the winner can claim the prize.";
+        }
+
+        alert("Claim failed: " + errorMsg);
+        claimVictoryBtn.disabled = false;
+        claimVictoryBtn.textContent = "CLAIM REWARDS";
+      }
+    });
+  } else {
+    console.error("❌ claimVictoryBtn not found in DOM!");
+  }
+
+  // RETURN AFTER DEFEAT - escrow holds funds for winner
 
   returnBtn.addEventListener("click", async () => {
     returnBtn.disabled = true;
     showTxModal("PROCESSING", "Finalizing battle...");
 
     try {
-      const winnerWallet = isHost ? room.guest_wallet : room.host_wallet;
-
       const losingTeam = battleMode === "team" ? initialMyTeam : [myPokemon];
       // Step 1: Delete the lost Pokemon
       txMessage.textContent =
@@ -917,21 +1362,11 @@
           : "Removing your Pokemon...";
       await deleteTeam(losingTeam);
 
-      // Step 2: Transfer bet amount to winner
-      txMessage.textContent = "Transferring bet to winner...";
-
-      try {
-        await transferPKCHP(winnerWallet, room.bet_amount);
-      } catch (err) {
-        console.error("Transfer to winner failed:", err);
-        // Continue even if transfer fails
-      }
-
-      // Step 3: Log transaction
+      // Step 2: Log transaction
       txMessage.textContent = "Recording battle...";
       const winnerDisplayName = getDisplayName(
         isHost ? room.guest_username : room.host_username,
-        winnerWallet
+        isHost ? room.guest_wallet : room.host_wallet,
       );
 
       if (window.logTransaction) {
@@ -958,7 +1393,7 @@
     }
   });
 
-  // CLAIM FORFEIT — opponent left mid-match
+  // CLAIM FORFEIT — opponent left mid-match (on-chain escrow only)
 
   claimForfeitBtn.addEventListener("click", async () => {
     claimForfeitBtn.disabled = true;
@@ -966,19 +1401,40 @@
     showTxModal("CLAIMING FORFEIT", "Processing forfeit rewards...");
 
     try {
+      console.log("🎯 Claim Forfeit button clicked!");
+      console.log("   Room code:", room.room_code);
+      console.log("   Winner wallet:", CURRENT_WALLET);
+
       const rewardAmount = room.bet_amount * 2;
 
-      // Try to claim from rewards contract
+      // Step 1: Confirm winner on blockchain (opponent forfeited)
+      txMessage.textContent = "Confirming forfeit win... (Confirm in MetaMask)";
+      console.log("🔗 Calling confirmWinner on escrow contract...");
+
       try {
-        await claimFromRewardsContract(rewardAmount);
-      } catch (err) {
-        console.error("Forfeit claim failed:", err);
+        await confirmEscrowWinner(room.room_code, CURRENT_WALLET);
+        console.log("✅ Winner confirmed on blockchain!");
+      } catch (confirmErr) {
+        // May already be confirmed or can use timeout claim
+        console.warn("Confirm error (may need timeout claim):", confirmErr);
       }
 
-      // Log forfeit win
+      // Step 2: Claim prize from escrow
+      txMessage.textContent =
+        "Claiming PKCHP from escrow... (Confirm in MetaMask)";
+      console.log("💰 Calling claimPrize on escrow contract...");
+
+      await claimEscrowPrize(room.room_code);
+      console.log("✅ Prize claimed from escrow!");
+
+      const actualPrizeAmount =
+        (await getEscrowPrizeAmount(room.room_code)) || rewardAmount;
+
+      // Step 3: Log forfeit win
+      txMessage.textContent = "Logging transaction...";
       const opponentDisplayName = getDisplayName(
         isHost ? room.guest_username : room.host_username,
-        isHost ? room.guest_wallet : room.host_wallet
+        isHost ? room.guest_wallet : room.host_wallet,
       );
 
       if (window.logTransaction) {
@@ -988,22 +1444,61 @@
           pokemon_rarity: myPokemon.rarity,
           pokemon_sprite: myPokemon.sprite,
           pokemon_level: myPokemon.level,
-          amount: rewardAmount,
+          amount: actualPrizeAmount,
           currency: "PKCHP",
           opponent_name: opponentDisplayName,
           exp_gained: 0,
         });
       }
 
+      // Step 4: Mark notification as claimed
+      txMessage.textContent = "Finalizing...";
+      try {
+        await supabase
+          .from("notifications")
+          .update({ is_read: true })
+          .eq("user_id", CURRENT_USER_ID)
+          .eq("type", "pvp_win")
+          .eq("room_code", room.room_code);
+        console.log("✅ Notification marked as claimed");
+      } catch (notifErr) {
+        console.warn("Notification update error (non-critical):", notifErr);
+      }
+
+      console.log("✅ Forfeit claim successful!");
       hideTxModal();
-      alert(`?? Forfeit rewards claimed!\n+${rewardAmount} PKCHP`);
-      clearRoomData();
-      window.location.href = "pvp-lobby.html";
+
+      showRewardNotice(
+        "FORFEIT CLAIMED",
+        `You won ${actualPrizeAmount} PKCHP by forfeit!`,
+      );
+
+      const finishAndReturn = () => {
+        rewardNoticeModal.classList.remove("show");
+        clearRoomData();
+        window.location.href = "pvp-lobby.html";
+      };
+
+      rewardNoticeOk.onclick = finishAndReturn;
+      setTimeout(finishAndReturn, 3500);
     } catch (err) {
-      console.error("Forfeit claim error:", err);
+      console.error("❌ Forfeit claim error:", err);
       hideTxModal();
-      clearRoomData();
-      window.location.href = "pvp-lobby.html";
+
+      let errorMsg = err.message || "Please try again.";
+      if (
+        errorMsg.includes("user rejected") ||
+        errorMsg.includes("User denied")
+      ) {
+        errorMsg = "Transaction rejected. Please try again.";
+      } else if (errorMsg.includes("Battle not complete")) {
+        errorMsg =
+          "Battle not finalized. Wait for timeout or try from Notifications.";
+      }
+
+      alert("Forfeit claim failed: " + errorMsg);
+      claimForfeitBtn.disabled = false;
+      claimForfeitBtn.textContent = "CLAIM FORFEIT";
     }
   });
 
@@ -1047,5 +1542,3 @@
 
   await init();
 });
-
-

@@ -282,6 +282,35 @@
     white-space: nowrap;
 }
 
+.notif-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.notif-claim-btn {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.15);
+    color: #bbf7d0;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.notif-claim-btn:hover:not(:disabled) {
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+    transform: translateY(-1px);
+}
+
+.notif-claim-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .notif-meta .wallet {
     color: #cbd5e1;
     font-weight: 600;
@@ -477,6 +506,101 @@
     text-align: right;
 }
 
+/* Bid notification styles */
+
+.notif-card.bid-notification {
+    border-color: rgba(59, 130, 246, 0.3);
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.02));
+}
+
+.notif-card.bid-notification.new {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 14px rgba(59, 130, 246, 0.25);
+}
+
+.notif-card.bid-notification::before {
+    background: linear-gradient(120deg, transparent 0%, rgba(59, 130, 246, 0.1) 40%, transparent 80%);
+}
+
+.notif-message {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+}
+
+.notif-type-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.notif-type-badge.new_bid {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.notif-type-badge.outbid {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.notif-type-badge.bid_accepted {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.notif-type-badge.bid_refunded {
+    background: rgba(168, 85, 247, 0.2);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.notif-type-badge.listing_cancelled {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.notif-type-badge.listing_sold {
+    background: rgba(249, 115, 22, 0.2);
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+/* Bid notification dropdown item */
+.pc-notif-dropdown-item.bid-notif {
+    border-left: 3px solid #3b82f6;
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.pc-notif-dropdown-item.bid-notif .title {
+    color: #93c5fd;
+}
+
+/* Filter button for bids */
+.chip-btn[data-filter="bids"] {
+    border-color: rgba(59, 130, 246, 0.35);
+    color: #60a5fa;
+}
+
+.chip-btn[data-filter="bids"]:hover {
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+}
+
+.chip-btn[data-filter="bids"].active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+}
+
 @media (max-width: 768px) {
     .notif-hero {
         padding: 1rem;
@@ -492,5 +616,10 @@
 
     .notif-chip {
         justify-self: start;
+    }
+
+    .notif-type-badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.4rem;
     }
 }

@@ -7,6 +7,19 @@ const PKCHP_ADDRESS = "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
 const BATTLE_REWARDS_ADDRESS = "0x80617C5F2069eF97792F77e1F28A4aD410B80578";
 const WELCOME_FAUCET_ADDRESS = "0x3c37FfC59f2018d95c2A2e16730aff18a6742F96";
 
+// ============================================
+// GLOBAL CONTRACT ADDRESSES FOR ALL PAGES
+// ============================================
+
+// PKCHP Token Contract (Sepolia)
+window.PKCHP_ADDRESS = "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
+
+// PVP Battle Escrow Contract (Sepolia) - NEWLY DEPLOYED
+window.PVP_ESCROW_ADDRESS = "0xb57a4Dee1528f57cb09d034F796A42B4a3Da1D28";
+
+// P2P Bidding Escrow Contract (Sepolia)
+window.P2P_ESCROW_ADDRESS = "0xDc929a5fF3fF20139B3e19668F19b04Abc7E1E96";
+
 // Welcome bonus amount (in PKCHP)
 const WELCOME_BONUS_AMOUNT = 250;
 
@@ -122,13 +135,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const faucetContract = new ethers.Contract(
           WELCOME_FAUCET_ADDRESS,
           WELCOME_FAUCET_ABI,
-          signer
+          signer,
         );
 
         try {
-          const [canClaimResult, reason] = await faucetContract.canClaim(
-            walletAddress
-          );
+          const [canClaimResult, reason] =
+            await faucetContract.canClaim(walletAddress);
 
           if (!canClaimResult) {
             console.warn("Cannot claim from faucet:", reason);
@@ -145,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
             userId,
             walletAddress,
             receipt.hash,
-            "success"
+            "success",
           );
           return { success: true, txHash: receipt.hash };
         } catch (contractErr) {
@@ -297,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showStatus(
           "⚠️ Please switch to Ethereum Mainnet or Sepolia",
           false,
-          true
+          true,
         );
         return;
       }
@@ -316,7 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await waitForSupabase(3000);
       } catch (e) {
         console.warn(
-          "Supabase not loaded from db.js, some features may not work"
+          "Supabase not loaded from db.js, some features may not work",
         );
       }
 
@@ -395,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const updatedUser = await updateExistingUsername(
             existingUser.id,
-            username
+            username,
           );
 
           existingUser = updatedUser;
@@ -492,7 +504,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const registerSound = new Audio(
-        "https://www.myinstants.com/media/sounds/ichooseyou.mp3"
+        "https://www.myinstants.com/media/sounds/ichooseyou.mp3",
       );
       registerSound.currentTime = 0;
 
@@ -542,7 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const registerSound = new Audio(
-      "https://www.myinstants.com/media/sounds/ichooseyou.mp3"
+      "https://www.myinstants.com/media/sounds/ichooseyou.mp3",
     );
 
     welcomeMessage.textContent = `Welcome back, ${user.username}!`;

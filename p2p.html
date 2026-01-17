@@ -186,8 +186,8 @@
             </div>
         </div>
 
-    <!-- PROCESSING LOCK MODAL -->
-    <div id="p2pProcessingModalBackdrop" class="processing-modal-backdrop d-none">
+        <!-- PROCESSING LOCK MODAL -->
+        <div id="p2pProcessingModalBackdrop" class="processing-modal-backdrop d-none">
             <div class="processing-modal">
                 <div class="processing-modal-header">
                     <span class="processing-modal-title">Completing Your P2P Trade</span>
@@ -204,25 +204,216 @@
                     </div>
                 </div>
             </div>
-    </div>
+        </div>
 
-    <!-- P2P MESSAGE MODAL -->
-    <div id="p2pMessageModalBackdrop" class="buy-modal-backdrop d-none">
-        <div class="buy-modal trainer-modal">
-            <div class="buy-modal-header">
-                <span class="buy-modal-title">Listing Update</span>
-                <button type="button" class="buy-modal-close" id="p2pMessageModalClose">&times;</button>
-            </div>
-            <div class="buy-modal-body trainer-modal-body">
-                <div class="buy-modal-right w-100">
-                    <p id="p2pMessageModalText" class="mb-0 text-light"></p>
+        <!-- P2P MESSAGE MODAL -->
+        <div id="p2pMessageModalBackdrop" class="buy-modal-backdrop d-none">
+            <div class="buy-modal trainer-modal">
+                <div class="buy-modal-header">
+                    <span class="buy-modal-title">Listing Update</span>
+                    <button type="button" class="buy-modal-close" id="p2pMessageModalClose">&times;</button>
+                </div>
+                <div class="buy-modal-body trainer-modal-body">
+                    <div class="buy-modal-right w-100">
+                        <p id="p2pMessageModalText" class="mb-0 text-light"></p>
+                    </div>
+                </div>
+                <div class="buy-modal-footer">
+                    <button type="button" class="btn btn-sm btn-warning" id="p2pMessageModalOk">OK</button>
                 </div>
             </div>
-            <div class="buy-modal-footer">
-                <button type="button" class="btn btn-sm btn-warning" id="p2pMessageModalOk">OK</button>
+        </div>
+
+        <!-- PLACE BID MODAL -->
+        <div id="p2pBidModalBackdrop" class="buy-modal-backdrop d-none">
+            <div class="buy-modal">
+                <div class="buy-modal-header">
+                    <span class="buy-modal-title">Place a Bid</span>
+                    <button type="button" class="buy-modal-close" id="p2pBidModalClose">&times;</button>
+                </div>
+
+                <div class="buy-modal-body">
+                    <div class="buy-modal-left">
+                        <img id="p2pBidModalSprite" src="" class="buy-modal-sprite" />
+                    </div>
+
+                    <div class="buy-modal-right">
+                        <h3 id="p2pBidModalName" class="buy-modal-name"></h3>
+                        <p class="buy-modal-rarity">
+                            Rarity: <span id="p2pBidModalRarity"></span>
+                        </p>
+
+                        <div class="bid-info-box mb-3">
+                            <div class="bid-info-row">
+                                <span class="bid-label">Buy Now Price:</span>
+                                <span id="p2pBidModalBuyNowPrice" class="bid-value text-warning">0 PKCHP</span>
+                            </div>
+                            <div class="bid-info-row">
+                                <span class="bid-label">Starting Bid:</span>
+                                <span id="p2pBidModalStartingBid" class="bid-value">0 PKCHP</span>
+                            </div>
+                            <div class="bid-info-row">
+                                <span class="bid-label">Current Highest Bid:</span>
+                                <span id="p2pBidModalHighestBid" class="bid-value text-success">0 PKCHP</span>
+                            </div>
+                            <div class="bid-info-row">
+                                <span class="bid-label">Minimum Bid:</span>
+                                <span id="p2pBidModalMinBid" class="bid-value text-info">0 PKCHP</span>
+                            </div>
+                        </div>
+
+                        <label class="form-label text-light">Your Bid (PKCHP):</label>
+                        <input type="number" id="p2pBidModalAmount" class="form-control" min="1"
+                            placeholder="Enter your bid amount">
+
+                        <p class="mt-2 mb-0 small text-muted">
+                            Your Pokechip Balance: <span id="p2pBidModalBalance" class="text-warning">0</span> PKCHP
+                        </p>
+
+                        <p class="buy-modal-warning text-info small mt-2 mb-0">
+                            💡 Bidding is off-chain. Your Pokechip will be deducted immediately and refunded if you're
+                            outbid or the listing is sold.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="buy-modal-footer">
+                    <button class="btn btn-secondary btn-sm" id="p2pBidModalCancel">Cancel</button>
+                    <button class="btn btn-success btn-sm" id="p2pBidModalConfirm">Place Bid</button>
+                </div>
             </div>
         </div>
-    </div>
+
+        <!-- VIEW BIDS MODAL (For Sellers) -->
+        <div id="p2pViewBidsModalBackdrop" class="buy-modal-backdrop d-none">
+            <div class="buy-modal buy-modal-wide">
+                <div class="buy-modal-header">
+                    <span class="buy-modal-title">Bids on Your Listing</span>
+                    <button type="button" class="buy-modal-close" id="p2pViewBidsModalClose">&times;</button>
+                </div>
+
+                <div class="buy-modal-body">
+                    <div class="buy-modal-left">
+                        <img id="p2pViewBidsModalSprite" src="" class="buy-modal-sprite" />
+                        <h4 id="p2pViewBidsModalName" class="text-center mt-2 text-light"></h4>
+                        <p id="p2pViewBidsModalPrice" class="text-center text-warning small mb-0"></p>
+                    </div>
+
+                    <div class="buy-modal-right bids-list-container">
+                        <div id="p2pViewBidsEmpty" class="text-center text-muted py-4">
+                            <p class="mb-0">No bids yet on this listing.</p>
+                        </div>
+                        <div id="p2pViewBidsList" class="bids-list"></div>
+                    </div>
+                </div>
+
+                <div class="buy-modal-footer">
+                    <button class="btn btn-secondary btn-sm" id="p2pViewBidsModalDone">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY BIDS MODAL (For Bidders to see their active bids) -->
+        <div id="p2pMyBidsModalBackdrop" class="buy-modal-backdrop d-none">
+            <div class="buy-modal buy-modal-wide">
+                <div class="buy-modal-header">
+                    <span class="buy-modal-title">My Active Bids</span>
+                    <button type="button" class="buy-modal-close" id="p2pMyBidsModalClose">&times;</button>
+                </div>
+
+                <div class="buy-modal-body">
+                    <div id="p2pMyBidsEmpty" class="text-center text-muted py-4 w-100">
+                        <p class="mb-0">You have no active bids.</p>
+                    </div>
+                    <div id="p2pMyBidsList" class="my-bids-list w-100"></div>
+                </div>
+
+                <div class="buy-modal-footer">
+                    <button class="btn btn-secondary btn-sm" id="p2pMyBidsModalDone">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIRM ACCEPT BID MODAL -->
+        <div id="p2pAcceptBidModalBackdrop" class="buy-modal-backdrop d-none">
+            <div class="buy-modal">
+                <div class="buy-modal-header">
+                    <span class="buy-modal-title">Accept This Bid?</span>
+                    <button type="button" class="buy-modal-close" id="p2pAcceptBidModalClose">&times;</button>
+                </div>
+
+                <div class="buy-modal-body">
+                    <div class="buy-modal-right w-100 text-center">
+                        <p class="text-light mb-3">
+                            Are you sure you want to accept this bid?
+                        </p>
+                        <div class="accept-bid-details">
+                            <p class="mb-1">
+                                <strong>Bidder:</strong> <span id="p2pAcceptBidBidder" class="text-info"></span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Bid Amount:</strong> <span id="p2pAcceptBidAmount" class="text-success"></span>
+                                PKCHP
+                            </p>
+                        </div>
+                        <p class="text-warning small mt-3 mb-0">
+                            ⚠️ This will transfer your Pokemon to the bidder and credit the bid amount to your wallet.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="buy-modal-footer">
+                    <button class="btn btn-secondary btn-sm" id="p2pAcceptBidModalCancel">Cancel</button>
+                    <button class="btn btn-success btn-sm" id="p2pAcceptBidModalConfirm">Accept Bid</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BID PROCESSING MODAL -->
+        <div id="p2pBidProcessingModalBackdrop" class="processing-modal-backdrop d-none">
+            <div class="processing-modal">
+                <div class="processing-modal-header">
+                    <span class="processing-modal-title">Processing Bid</span>
+                </div>
+                <div class="processing-modal-body">
+                    <div class="processing-spinner"></div>
+                    <div class="processing-copy">
+                        <p id="p2pBidProcessingStatus" class="processing-main">
+                            Processing your bid...
+                        </p>
+                        <p id="p2pBidProcessingSub" class="processing-sub">
+                            Please wait while we process your bid.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUCCESS MODAL -->
+        <div id="p2pSuccessModalBackdrop" class="buy-modal-backdrop d-none">
+            <div class="buy-modal">
+                <div class="buy-modal-header">
+                    <span class="buy-modal-title" id="p2pSuccessModalTitle">Success!</span>
+                    <button type="button" class="buy-modal-close" id="p2pSuccessModalClose">&times;</button>
+                </div>
+
+                <div class="buy-modal-body">
+                    <div class="buy-modal-left" id="p2pSuccessModalSpriteContainer">
+                        <img id="p2pSuccessModalSprite" src="" class="buy-modal-sprite" />
+                    </div>
+
+                    <div class="buy-modal-right">
+                        <h3 id="p2pSuccessModalName" class="buy-modal-name text-success"></h3>
+                        <p id="p2pSuccessModalMessage" class="text-light mb-3"></p>
+                        <p id="p2pSuccessModalDetails" class="text-warning small mb-0"></p>
+                    </div>
+                </div>
+
+                <div class="buy-modal-footer">
+                    <button class="btn btn-success btn-sm" id="p2pSuccessModalOk">OK</button>
+                </div>
+            </div>
+        </div>
 
 
     </main>

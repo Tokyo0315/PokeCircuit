@@ -179,8 +179,17 @@
                         Rarity: <span id="sellModalRarity"></span>
                     </p>
 
-                    <label class="form-label text-light">Set Price (PKCHP):</label>
-                    <input type="number" id="sellModalPrice" class="form-control" min="1" placeholder="Enter price">
+                    <label class="form-label text-light">Buy Now Price (PKCHP):</label>
+                    <input type="number" id="sellModalPrice" class="form-control" min="1"
+                        placeholder="Enter buy now price">
+
+                    <div class="mt-3">
+                        <label class="form-label text-light">Starting Bid (PKCHP) - Optional:</label>
+                        <input type="number" id="sellModalStartingBid" class="form-control" min="0"
+                            placeholder="Enter starting bid (0 = no bidding)">
+                        <small class="text-muted">Set to 0 or leave empty to disable bidding. Bidding uses off-chain
+                            Pokechip.</small>
+                    </div>
                 </div>
             </div>
 
@@ -279,7 +288,3 @@
 </body>
 
 </html>
-
-
-
-

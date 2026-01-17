@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const message = (err?.message || "").toLowerCase();
           if (message.includes("duplicate") || message.includes("unique")) {
             showTrainerModalError(
-              "This username is already taken. Please choose another."
+              "This username is already taken. Please choose another.",
             );
           } else {
             showTrainerModalError("Username update failed. Try again.");
@@ -261,11 +261,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         localStorage.removeItem(CURRENT_USER_ID_KEY);
         localStorage.removeItem("trainerUsername");
         window.location.href = "index.html";
-      })
+      }),
     );
   }
 
-  // Load PKCHP token balance from blockchain
+  // Load PKCHP token balance from blockchain (on-chain)
   async function loadPKCHP(wallet) {
     if (!window.ethereum) return 0;
 
@@ -283,6 +283,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // Load off-chain Pokechip balance from database (for bidding)
+  async function loadOffChainPokechip() {
+    const userId = localStorage.getItem(CURRENT_USER_ID_KEY);
+    if (!userId || !window.supabase) return 0;
+
+    try {
+      const { data, error } = await window.supabase
+        .from("user_wallet")
+        .select("pokechip_balance")
+        .eq("user_id", userId)
+        .single();
+
+      if (error) {
+        console.warn("Off-chain balance fetch error:", error);
+        return 0;
+      }
+
+      return data?.pokechip_balance || 0;
+    } catch (err) {
+      console.error("Off-chain Pokechip fetch error:", err);
+      return 0;
+    }
+  }
+
   async function updatePKCHP() {
     const wallet = localStorage.getItem(CURRENT_WALLET_ADDRESS_KEY);
 
@@ -291,9 +315,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const bal = await loadPKCHP(wallet);
-    if (pkchpDisplay)
-      pkchpDisplay.textContent = Math.floor(bal).toLocaleString();
+    // Try to load on-chain balance first
+    const onChainBal = await loadPKCHP(wallet);
+
+    // Also load off-chain balance
+    const offChainBal = await loadOffChainPokechip();
+
+    // Use on-chain if available, otherwise use off-chain
+    // For bidding, the off-chain balance is what matters
+    const displayBal = onChainBal > 0 ? onChainBal : offChainBal;
+
+    if (pkchpDisplay) {
+      pkchpDisplay.textContent = Math.floor(displayBal).toLocaleString();
+    }
+
+    // Also update any off-chain specific displays
+    const offChainDisplays = document.querySelectorAll(".pc-offchain-pokechip");
+    offChainDisplays.forEach((el) => {
+      el.textContent = Math.floor(offChainBal).toLocaleString();
+    });
+
+    console.log(`[BALANCE] On-chain: ${onChainBal}, Off-chain: ${offChainBal}`);
   }
 
   window.addEventListener("focus", updatePKCHP);
@@ -385,8 +427,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       chainId === "0xaa36a7"
         ? "Sepolia Testnet"
         : chainId === "0x1"
-        ? "Ethereum Mainnet"
-        : "Unknown";
+          ? "Ethereum Mainnet"
+          : "Unknown";
 
     if (chainDisplay) chainDisplay.textContent = chainName;
 
@@ -400,7 +442,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       const priceRes = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd",
       );
       const priceData = await priceRes.json();
       const usdVal = balanceEth * priceData.ethereum.usd;
