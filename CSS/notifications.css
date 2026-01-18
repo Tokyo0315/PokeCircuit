@@ -176,6 +176,16 @@
     box-shadow: 0 10px 20px rgba(249, 115, 22, 0.3);
 }
 
+.chip-btn.danger {
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+}
+
+.chip-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+}
+
 .notif-panel-body {
     margin-top: 1rem;
 }

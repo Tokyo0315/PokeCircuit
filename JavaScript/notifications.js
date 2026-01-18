@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const bellBtn = document.getElementById("notifBell");
   const dropdown = document.getElementById("notifDropdown");
+  const clearAllBtn = document.getElementById("notifClearAll");
+  const clearDropdownBtn = document.getElementById("notifClearDropdown");
 
   let notifications = [];
   let filterMode = "all"; // news | sales | bids | all
@@ -44,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   ];
   const PVP_NOTIFICATION_TYPES = ["pvp_win"];
   const PVP_ESCROW_ADDRESS =
-    window.PVP_ESCROW_ADDRESS || "0x420D05bF983a1bC59917b80E81A0cC4d36486A2D";
+    window.PVP_ESCROW_ADDRESS || "0xd9145CCE52D386f254917e481eB44e9943F39138";
   const PVP_ESCROW_ABI = [
     {
       inputs: [
@@ -52,6 +54,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         { internalType: "address", name: "winner", type: "address" },
       ],
       name: "confirmWinner",
+      outputs: [],
+      stateMutability: "nonpayable",
+      type: "function",
+    },
+    {
+      inputs: [
+        { internalType: "bytes32", name: "roomId", type: "bytes32" },
+        { internalType: "address", name: "winner", type: "address" },
+      ],
+      name: "confirmAndClaim",
       outputs: [],
       stateMutability: "nonpayable",
       type: "function",
@@ -157,7 +169,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // Claim prize - auto-confirms winner if needed
+  // Claim prize - uses confirmAndClaim for single transaction
   const claimEscrowPrize = async (roomCode) => {
     if (!window.ethereum || !roomCode) {
       throw new Error("Wallet not connected for escrow claim");
@@ -198,20 +210,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
     const roomId = roomCodeToBytes32(roomCode);
 
-    // If battle still in progress, confirm winner first
+    // If battle still in progress, use confirmAndClaim for single transaction
     if (escrowStatus.status === ESCROW_STATUS.BATTLE_IN_PROGRESS) {
-      console.log("[ESCROW] Battle in progress, confirming winner first...");
-      const confirmTx = await escrowContract.confirmWinner(
-        roomId,
-        currentWallet,
-      );
-      await confirmTx.wait();
-      console.log("[ESCROW] Winner confirmed!");
+      console.log("[ESCROW] Battle in progress, using confirmAndClaim...");
+      const tx = await escrowContract.confirmAndClaim(roomId, currentWallet);
+      await tx.wait();
+      console.log("[ESCROW] Winner confirmed and prize claimed!");
+      return;
     }
 
-    // Now claim the prize
-    console.log("[ESCROW] Claiming prize...");
-    const tx = await escrowContract.claimPrize(roomId);
+    // Battle complete - just claim the prize
+    if (escrowStatus.status === ESCROW_STATUS.BATTLE_COMPLETE) {
+      if (escrowStatus.winner.toLowerCase() !== currentWallet) {
+        throw new Error("Only the winner can claim the prize.");
+      }
+      console.log("[ESCROW] Claiming prize...");
+      const tx = await escrowContract.claimPrize(roomId);
+      await tx.wait();
+      console.log("[ESCROW] Prize claimed!");
+      return;
+    }
+
+    // Fallback - try confirmAndClaim
+    console.log("[ESCROW] Using confirmAndClaim as fallback...");
+    const tx = await escrowContract.confirmAndClaim(roomId, currentWallet);
     await tx.wait();
     console.log("[ESCROW] Prize claimed!");
   };
@@ -1152,7 +1174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Show success message
         setTimeout(() => {
           alert(
-            `Reward claimed!\n\n+${formatAmount(prizeAmount)} PKCHP\n\nThe tokens have been sent to your wallet.`,
+            `Reward claimed! +${formatAmount(prizeAmount)} PKCHP sent to your wallet.`,
           );
         }, 300);
 
@@ -1160,34 +1182,130 @@ document.addEventListener("DOMContentLoaded", async () => {
       } catch (err) {
         console.error("[PVP CLAIM] Claim failed:", err);
         claimBtn.disabled = false;
-        claimBtn.textContent = "Claim";
+        claimBtn.textContent = "Retry";
 
-        let errorMsg = err.message || "Please try again.";
-
-        // Provide user-friendly error messages
-        if (errorMsg.includes("Only winner can claim")) {
-          errorMsg = "Only the winner can claim the prize.";
-        } else if (errorMsg.includes("Battle not complete")) {
-          errorMsg = "Battle not finalized yet. Please wait.";
-        } else if (
-          errorMsg.includes("user rejected") ||
-          errorMsg.includes("User denied")
-        ) {
-          errorMsg = "Transaction rejected. Please try again.";
-        } else if (errorMsg.includes("not found on blockchain")) {
-          errorMsg =
-            "Escrow room not found. Both players must have deposited PKCHP before battle.";
-        } else if (errorMsg.includes("Opponent never deposited")) {
-          errorMsg =
-            "Opponent never deposited to escrow. Cannot claim - escrow was not set up properly.";
-        } else if (errorMsg.includes("already been claimed")) {
-          errorMsg = "Prize has already been claimed.";
-        } else if (errorMsg.includes("cancelled")) {
-          errorMsg = "This battle was cancelled.";
-        }
-
-        alert("Claim failed: " + errorMsg);
+        // Show simple retry message instead of complex error
+        alert("Please reclick the claim button to complete the transaction.");
       }
+    });
+  }
+
+  // Clear all notifications function
+  const clearAllNotifications = async () => {
+    // Refresh user ID in case it changed
+    CURRENT_USER_ID = getCurrentUserId();
+
+    if (!supa || !CURRENT_USER_ID) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to clear all notifications?")) {
+      return;
+    }
+
+    try {
+      console.log(
+        "[CLEAR] Starting notification clear for user:",
+        CURRENT_USER_ID,
+      );
+
+      let totalDeleted = 0;
+
+      // Delete from notifications table (user_id is UUID type)
+      const { data: notifData, error: notifError } = await supa
+        .from("notifications")
+        .delete()
+        .eq("user_id", CURRENT_USER_ID)
+        .select();
+
+      if (notifError) {
+        console.error(
+          "[CLEAR] Failed to delete from notifications:",
+          notifError,
+        );
+      } else {
+        console.log(
+          "[CLEAR] Notifications table cleared, deleted:",
+          notifData?.length || 0,
+          "rows",
+        );
+        totalDeleted += notifData?.length || 0;
+      }
+
+      // Delete sale notifications from transactions (user_id is TEXT type)
+      const { data: txData, error: txError } = await supa
+        .from("transactions")
+        .delete()
+        .eq("user_id", CURRENT_USER_ID)
+        .in("type", ["p2p_sell", "pvp_win_pending"])
+        .select();
+
+      if (txError) {
+        console.error("[CLEAR] Failed to delete from transactions:", txError);
+      } else {
+        console.log(
+          "[CLEAR] Transactions cleared, deleted:",
+          txData?.length || 0,
+          "rows",
+        );
+        totalDeleted += txData?.length || 0;
+      }
+
+      // Delete from p2p_notifications table (user_id is TEXT type)
+      const { data: p2pData, error: p2pError } = await supa
+        .from("p2p_notifications")
+        .delete()
+        .eq("user_id", CURRENT_USER_ID)
+        .select();
+
+      if (p2pError) {
+        console.error(
+          "[CLEAR] Failed to delete from p2p_notifications:",
+          p2pError,
+        );
+      } else {
+        console.log(
+          "[CLEAR] P2P notifications cleared, deleted:",
+          p2pData?.length || 0,
+          "rows",
+        );
+        totalDeleted += p2pData?.length || 0;
+      }
+
+      // Clear local array
+      notifications = [];
+      renderAll();
+
+      console.log(
+        "[CLEAR] All notifications cleared successfully, total:",
+        totalDeleted,
+      );
+
+      if (totalDeleted > 0) {
+        alert(`Cleared ${totalDeleted} notification(s) successfully!`);
+      } else {
+        alert("No notifications to clear.");
+      }
+    } catch (err) {
+      console.error("[CLEAR] Failed to clear notifications:", err);
+      alert(
+        "Failed to clear notifications: " +
+          (err.message || "Please try again."),
+      );
+    }
+  };
+
+  // Clear All button (notifications.html page)
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener("click", clearAllNotifications);
+  }
+
+  // Clear button in dropdown (bell)
+  if (clearDropdownBtn) {
+    clearDropdownBtn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await clearAllNotifications();
     });
   }
 

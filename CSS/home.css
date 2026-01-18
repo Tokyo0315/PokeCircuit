@@ -319,7 +319,25 @@
 
 .pc-notif-dropdown-footer {
     margin-top: 0.5rem;
-    text-align: right;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pc-notif-clear-btn {
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pc-notif-clear-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
 }
 
 .pc-trainer-badge {
