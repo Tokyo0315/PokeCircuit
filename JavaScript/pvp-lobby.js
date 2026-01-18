@@ -1,4 +1,4 @@
-// PVP Lobby: room creation, matchmaking, and escrow-backed betting
+﻿// PVP Lobby: room creation, matchmaking, and escrow-backed betting
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!window.supabase) {
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const PKCHP_ADDRESS =
     window.PKCHP_ADDRESS || "0xe53613104B5e271Af4226F6867fBb595c1aE8d26";
   const PVP_ESCROW_ADDRESS =
-    window.PVP_ESCROW_ADDRESS || "0x420D05bF983a1bC59917b80E81A0cC4d36486A2D";
+    window.PVP_ESCROW_ADDRESS || "0xd9145CCE52D386f254917e481eB44e9943F39138";
 
   const PKCHP_ABI = [
     {
@@ -61,8 +61,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const PVP_ESCROW_ABI = [
     {
       inputs: [
-        { internalType: "bytes32", name: "roomId", type: "bytes32" },
-        { internalType: "uint256", name: "betAmount", type: "uint256" },
+        { internalType: "string", name: "_roomCode", type: "string" },
+        { internalType: "uint256", name: "_betAmount", type: "uint256" },
       ],
       name: "createRoom",
       outputs: [],
@@ -70,44 +70,36 @@ document.addEventListener("DOMContentLoaded", async () => {
       type: "function",
     },
     {
-      inputs: [{ internalType: "bytes32", name: "roomId", type: "bytes32" }],
+      inputs: [{ internalType: "string", name: "_roomCode", type: "string" }],
       name: "joinRoom",
       outputs: [],
       stateMutability: "nonpayable",
       type: "function",
     },
     {
-      inputs: [{ internalType: "bytes32", name: "roomId", type: "bytes32" }],
+      inputs: [{ internalType: "string", name: "_roomCode", type: "string" }],
       name: "cancelRoom",
       outputs: [],
       stateMutability: "nonpayable",
       type: "function",
     },
     {
-      inputs: [{ internalType: "bytes32", name: "roomId", type: "bytes32" }],
+      inputs: [{ internalType: "string", name: "_roomCode", type: "string" }],
       name: "getRoom",
       outputs: [
-        { internalType: "address", name: "player1", type: "address" },
-        { internalType: "address", name: "player2", type: "address" },
+        { internalType: "address", name: "host", type: "address" },
+        { internalType: "address", name: "guest", type: "address" },
         { internalType: "uint256", name: "betAmount", type: "uint256" },
-        { internalType: "uint256", name: "createdAt", type: "uint256" },
-        { internalType: "uint256", name: "battleStartedAt", type: "uint256" },
+        { internalType: "bool", name: "hostDeposited", type: "bool" },
+        { internalType: "bool", name: "guestDeposited", type: "bool" },
+        { internalType: "bool", name: "isActive", type: "bool" },
+        { internalType: "bool", name: "isFinished", type: "bool" },
         { internalType: "address", name: "winner", type: "address" },
-        { internalType: "uint8", name: "status", type: "uint8" },
       ],
       stateMutability: "view",
       type: "function",
     },
   ];
-
-  // Escrow status constants
-  const ESCROW_STATUS = {
-    WAITING_FOR_OPPONENT: 0,
-    BATTLE_IN_PROGRESS: 1,
-    BATTLE_COMPLETE: 2,
-    CANCELLED: 3,
-    CLAIMED: 4,
-  };
 
   // UI references used across the lobby flow
   const createBetOptions = document.getElementById("createBetOptions");
@@ -185,10 +177,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return mode === "team" ? 3 : 1;
   }
 
-  function roomCodeToBytes32(roomCode) {
-    return ethers.keccak256(ethers.toUtf8Bytes(roomCode));
-  }
-
   async function getCollectionCount() {
     const { data, error } = await supabase
       .from("user_pokemon")
@@ -262,7 +250,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Balance + approval helpers
+  // Balance + approval helpers 
   async function loadBalance() {
     try {
       const wallet = CURRENT_WALLET;
@@ -270,11 +258,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         pkchpBalance = await getWalletBalanceFromDb();
       } else {
         const provider = new ethers.BrowserProvider(window.ethereum);
-        const contract = new ethers.Contract(
-          PKCHP_ADDRESS,
-          PKCHP_ABI,
-          provider,
-        );
+        const contract = new ethers.Contract(PKCHP_ADDRESS, PKCHP_ABI, provider);
 
         const raw = await contract.balanceOf(wallet);
         const dec = await contract.decimals();
@@ -319,12 +303,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       const pkchpContract = new ethers.Contract(
         PKCHP_ADDRESS,
         PKCHP_ABI,
-        signer,
+        signer
       );
 
       const currentAllowance = await pkchpContract.allowance(
         CURRENT_WALLET,
-        PVP_ESCROW_ADDRESS,
+        PVP_ESCROW_ADDRESS
       );
       const amountWei = ethers.parseUnits(amount.toString(), 18);
 
@@ -343,122 +327,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Host deposit flow (room creation)
+// Host deposit flow (room creation)
 
   async function depositToEscrow(roomCode, amount) {
     if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
-      console.warn(
-        "⚠️ Wallet not connected or escrow address missing, skipping escrow deposit",
-      );
-      return false;
+      console.log("Escrow not configured, using database-only mode");
+      return true;
     }
 
     try {
-      console.log("📤 Starting escrow deposit...");
-      console.log("   Room code:", roomCode);
-      console.log("   Amount:", amount, "PKCHP");
-      console.log("   Escrow address:", PVP_ESCROW_ADDRESS);
-      console.log("   PKCHP address:", PKCHP_ADDRESS);
-
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const signerAddress = await signer.getAddress();
-      console.log("   Signer address:", signerAddress);
-
       const escrowContract = new ethers.Contract(
         PVP_ESCROW_ADDRESS,
         PVP_ESCROW_ABI,
-        signer,
+        signer
       );
 
-      const roomId = roomCodeToBytes32(roomCode);
-      const amountWei = ethers.parseUnits(amount.toString(), 18);
-
-      console.log("   Room ID (bytes32):", roomId);
-      console.log("   Amount (wei):", amountWei.toString());
-      console.log(
-        "🔗 Calling createRoom on escrow contract... (Confirm in MetaMask)",
-      );
-
-      const tx = await escrowContract.createRoom(roomId, amountWei);
-      console.log("   Transaction hash:", tx.hash);
-      console.log("⏳ Waiting for transaction confirmation...");
-
-      const receipt = await tx.wait();
-      console.log("✅ Escrow deposit transaction confirmed!");
-      console.log("   Block number:", receipt.blockNumber);
-      console.log("   Gas used:", receipt.gasUsed.toString());
-
-      // Verify the room was created on-chain
-      const status = await verifyEscrowRoomStatus(roomCode);
-      console.log("   Post-create escrow status:", status);
-
-      if (!status || !status.exists) {
-        console.error("❌ Escrow room creation verification failed!");
-        throw new Error(
-          "Escrow room creation failed. Transaction confirmed but room not found.",
-        );
-      }
-
-      if (status.status !== ESCROW_STATUS.WAITING_FOR_OPPONENT) {
-        console.error("❌ Unexpected room status after creation!");
-        console.error("   Expected: 0 (WaitingForOpponent)");
-        console.error("   Actual:", status.status);
-      }
-
-      console.log("✅ Escrow room verified on-chain! Waiting for opponent.");
+      const tx = await escrowContract.createRoom(roomCode, amount);
+      await tx.wait();
+      console.log("✓ Deposited to escrow for room:", roomCode);
       return true;
     } catch (err) {
-      console.error("❌ Escrow deposit failed:", err);
-      console.error("   Error code:", err.code);
-      console.error("   Error message:", err.message);
-
-      // Check if user rejected
-      if (
-        err.code === 4001 ||
-        err.code === "ACTION_REJECTED" ||
-        (err.message && err.message.toLowerCase().includes("user rejected"))
-      ) {
-        console.warn("⚠️ User rejected the escrow deposit transaction");
-      }
-
-      // Don't throw - return false to indicate failure
-      return false;
-    }
-  }
-
-  // Verify escrow room status on blockchain
-  async function verifyEscrowRoomStatus(roomCode) {
-    if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
-      return null;
-    }
-
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const escrowContract = new ethers.Contract(
-        PVP_ESCROW_ADDRESS,
-        PVP_ESCROW_ABI,
-        provider,
-      );
-
-      const roomId = roomCodeToBytes32(roomCode);
-      const roomData = await escrowContract.getRoom(roomId);
-
-      const player1 = roomData[0];
-      const player2 = roomData[1];
-      const status = Number(roomData[6]);
-      const zeroAddress = "0x0000000000000000000000000000000000000000";
-
-      return {
-        exists: player1 !== zeroAddress,
-        player1,
-        player2,
-        status,
-        hasPlayer2: player2 !== zeroAddress,
-      };
-    } catch (err) {
-      console.error("Failed to verify escrow room:", err);
-      return null;
+      console.error("Escrow deposit failed:", err);
+      throw err;
     }
   }
 
@@ -466,98 +358,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function joinEscrowRoom(roomCode) {
     if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
-      console.warn(
-        "⚠️ Wallet not connected or escrow address missing, skipping escrow join",
-      );
-      return false;
+      console.log("Escrow not configured, using database-only mode");
+      return true;
     }
 
     try {
-      console.log("📤 Starting escrow join...");
-      console.log("   Room code:", roomCode);
-      console.log("   Escrow address:", PVP_ESCROW_ADDRESS);
-
-      // First verify the room exists and is joinable on-chain
-      const preStatus = await verifyEscrowRoomStatus(roomCode);
-      console.log("   Pre-join escrow status:", preStatus);
-
-      if (!preStatus || !preStatus.exists) {
-        console.error("❌ Escrow room does not exist on blockchain!");
-        console.error("   The host may not have completed their deposit.");
-        throw new Error(
-          "Escrow room not found. Host must complete their deposit first.",
-        );
-      }
-
-      if (preStatus.status !== ESCROW_STATUS.WAITING_FOR_OPPONENT) {
-        console.error("❌ Escrow room is not in joinable state!");
-        console.error("   Current status:", preStatus.status);
-        throw new Error(
-          "Escrow room is not available to join. It may already have an opponent or be cancelled.",
-        );
-      }
-
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const signerAddress = await signer.getAddress();
-      console.log("   Signer address:", signerAddress);
-
       const escrowContract = new ethers.Contract(
         PVP_ESCROW_ADDRESS,
         PVP_ESCROW_ABI,
-        signer,
+        signer
       );
 
-      const roomId = roomCodeToBytes32(roomCode);
-      console.log("   Room ID (bytes32):", roomId);
-      console.log(
-        "🔗 Calling joinRoom on escrow contract... (Confirm in MetaMask)",
-      );
-
-      const tx = await escrowContract.joinRoom(roomId);
-      console.log("   Transaction hash:", tx.hash);
-      console.log("⏳ Waiting for transaction confirmation...");
-
-      const receipt = await tx.wait();
-      console.log("✅ Escrow join transaction confirmed!");
-      console.log("   Block number:", receipt.blockNumber);
-      console.log("   Gas used:", receipt.gasUsed.toString());
-
-      // Verify the join was successful by checking status
-      const postStatus = await verifyEscrowRoomStatus(roomCode);
-      console.log("   Post-join escrow status:", postStatus);
-
-      if (
-        !postStatus ||
-        postStatus.status !== ESCROW_STATUS.BATTLE_IN_PROGRESS
-      ) {
-        console.error("❌ Escrow join verification failed!");
-        console.error("   Expected status: 1 (BattleInProgress)");
-        console.error("   Actual status:", postStatus?.status);
-        throw new Error(
-          "Escrow join verification failed. The transaction was confirmed but the room status is incorrect.",
-        );
-      }
-
-      console.log(
-        "✅ Escrow join verified! Battle is now in progress on-chain.",
-      );
+      const tx = await escrowContract.joinRoom(roomCode);
+      await tx.wait();
+      console.log("✓ Joined escrow room:", roomCode);
       return true;
     } catch (err) {
-      console.error("❌ Escrow join failed:", err);
-      console.error("   Error code:", err.code);
-      console.error("   Error message:", err.message);
-
-      // Check if user rejected
-      if (
-        err.code === 4001 ||
-        err.code === "ACTION_REJECTED" ||
-        (err.message && err.message.toLowerCase().includes("user rejected"))
-      ) {
-        console.warn("⚠️ User rejected the escrow join transaction");
-      }
-
-      // Re-throw with descriptive message
+      console.error("Escrow join failed:", err);
       throw err;
     }
   }
@@ -573,11 +392,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       const escrowContract = new ethers.Contract(
         PVP_ESCROW_ADDRESS,
         PVP_ESCROW_ABI,
-        signer,
+        signer
       );
 
-      const roomId = roomCodeToBytes32(roomCode);
-      const tx = await escrowContract.cancelRoom(roomId);
+      const tx = await escrowContract.cancelRoom(roomCode);
       await tx.wait();
       console.log("✓ Cancelled escrow room, refund issued");
       return true;
@@ -626,11 +444,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Create room: approve, deposit, then persist
 
   createRoomBtn.addEventListener("click", async () => {
-    if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
-      showError("Connect your wallet to bet PKCHP in escrow.");
-      return;
-    }
-
     if (!selectedBet) {
       showError("Please select a bet amount!");
       return;
@@ -650,7 +463,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (pkchpBalance < selectedBet) {
         showError(
-          `Insufficient PKCHP! You need ${selectedBet} PKCHP but only have ${pkchpBalance}.`,
+          `Insufficient PKCHP! You need ${selectedBet} PKCHP but only have ${pkchpBalance}.`
         );
         createRoomBtn.disabled = false;
         createRoomBtn.innerHTML =
@@ -686,19 +499,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         attempts++;
       }
 
-      // Step 2: Deposit to escrow contract (MANDATORY for on-chain rewards)
-      let escrowSuccess = false;
+      // Step 2: Deposit to escrow contract
       if (PVP_ESCROW_ADDRESS) {
-        escrowSuccess = await depositToEscrow(roomCode, selectedBet);
-        if (!escrowSuccess) {
-          throw new Error(
-            "Escrow deposit failed or was rejected. You must deposit PKCHP to the escrow contract to create a battle room.",
-          );
-        }
-      } else {
-        throw new Error(
-          "Escrow contract address not configured. Cannot create room.",
-        );
+        await depositToEscrow(roomCode, selectedBet);
       }
 
       createRoomBtn.innerHTML =
@@ -784,7 +587,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       showError(
         isUserRejected
           ? "You cancelled the room creation. You may create again."
-          : "Failed to create room: " + message,
+          : "Failed to create room: " + message
       );
     }
 
@@ -813,7 +616,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         (payload) => {
           console.log("Room updated:", payload.new);
           handleRoomUpdate(payload.new);
-        },
+        }
       )
       .subscribe();
   }
@@ -828,7 +631,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       localStorage.setItem("PVP_IS_HOST", "true");
       localStorage.setItem(
         "PVP_BATTLE_MODE",
-        room.battle_mode || selectedMode || "single",
+        room.battle_mode || selectedMode || "single"
       );
 
       window.location.href = "pvp-select.html";
@@ -927,7 +730,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (error || !room) {
         hideModal(joiningModal);
         showError(
-          "Room not found or already full. Check the code and try again.",
+          "Room not found or already full. Check the code and try again."
         );
         joinRoomBtn.disabled = false;
         return;
@@ -951,7 +754,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (pkchpBalance < room.bet_amount) {
         hideModal(joiningModal);
         showError(
-          `Insufficient PKCHP! This room requires ${room.bet_amount} PKCHP but you only have ${pkchpBalance}.`,
+          `Insufficient PKCHP! This room requires ${room.bet_amount} PKCHP but you only have ${pkchpBalance}.`
         );
         joinRoomBtn.disabled = false;
         return;
@@ -962,7 +765,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       opponentName.textContent = getDisplayName(
         room.host_username,
-        room.host_wallet,
+        room.host_wallet
       );
       opponentWallet.textContent = shortenWallet(room.host_wallet);
       confirmBetAmount.textContent = `${room.bet_amount} PKCHP`;
@@ -991,10 +794,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   acceptJoinBtn.addEventListener("click", async () => {
     if (!pendingRoom) return;
-    if (!window.ethereum || !PVP_ESCROW_ADDRESS) {
-      showError("Connect your wallet to join and deposit to escrow.");
-      return;
-    }
 
     acceptJoinBtn.disabled = true;
     acceptJoinBtn.textContent = "APPROVING...";
@@ -1018,19 +817,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       acceptJoinBtn.textContent = "DEPOSITING...";
 
-      // Step 2: Deposit to escrow (MANDATORY for on-chain rewards)
-      let escrowSuccess = false;
+      // Step 2: Deposit to escrow
       if (PVP_ESCROW_ADDRESS) {
-        escrowSuccess = await joinEscrowRoom(pendingRoom.room_code);
-        if (!escrowSuccess) {
-          throw new Error(
-            "Escrow deposit failed or was rejected. You must deposit PKCHP to the escrow contract to join a battle room.",
-          );
-        }
-      } else {
-        throw new Error(
-          "Escrow contract address not configured. Cannot join room.",
-        );
+        await joinEscrowRoom(pendingRoom.room_code);
       }
 
       acceptJoinBtn.textContent = "JOINING...";
